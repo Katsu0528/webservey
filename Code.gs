@@ -546,12 +546,12 @@ function buildDrivePreviewUrl(fileId) {
 
 function buildDriveViewUrl(fileId) {
   if (!fileId) return '';
-  return `https://drive.google.com/uc?export=view&id=${fileId}`;
+  return `https://lh3.googleusercontent.com/d/${fileId}`;
 }
 
 function buildDriveImageUrl(fileId) {
   if (!fileId) return '';
-  // 画像タグで直接表示できる view リンクを優先し、フォールバックとして preview を返す。
+  // 画像タグで直接表示できる googleusercontent リンクを優先し、フォールバックとして preview を返す。
   return buildDriveViewUrl(fileId) || buildDrivePreviewUrl(fileId);
 }
 
