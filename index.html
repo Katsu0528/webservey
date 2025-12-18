@@ -508,8 +508,7 @@
         const iframe = document.createElement('iframe');
         iframe.title = alt || 'image preview';
         iframe.loading = 'lazy';
-        iframe.referrerPolicy = 'no-referrer';
-        iframe.sandbox = 'allow-same-origin';
+        iframe.style.display = 'block';
 
         const escapeAttr = (value) =>
           String(value || '')
@@ -538,16 +537,32 @@
         const applyFallback = () => {
           if (iframe.dataset.fallbackApplied) return;
           iframe.dataset.fallbackApplied = 'true';
+          iframe.sandbox = 'allow-same-origin';
+          iframe.referrerPolicy = 'no-referrer';
           iframe.srcdoc = buildSrcDoc(escapeAttr(FALLBACK_IMAGE), '画像を読み込めませんでした');
         };
 
-        if (src) {
-          iframe.srcdoc = buildSrcDoc(escapeAttr(src), escapeAttr(alt || 'image preview'));
+        const isDrivePreview = typeof src === 'string' && /drive\.google\.com\/file\/.+\/preview/.test(src);
+
+        if (isDrivePreview) {
+          iframe.src = src;
+          iframe.allow = 'autoplay';
+          iframe.sandbox = 'allow-same-origin allow-scripts allow-popups allow-forms';
+          iframe.referrerPolicy = 'no-referrer';
+          iframe.addEventListener('error', applyFallback);
         } else {
-          applyFallback();
+          iframe.referrerPolicy = 'no-referrer';
+          iframe.sandbox = 'allow-same-origin';
+
+          if (src) {
+            iframe.srcdoc = buildSrcDoc(escapeAttr(src), escapeAttr(alt || 'image preview'));
+          } else {
+            applyFallback();
+          }
+
+          iframe.addEventListener('error', applyFallback);
         }
 
-        iframe.addEventListener('error', applyFallback);
         wrapper.appendChild(iframe);
         return wrapper;
       }
