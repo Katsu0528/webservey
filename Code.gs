@@ -168,7 +168,7 @@ function getProductImageUrlFromDrive(rawMaker, product) {
   }
 
   const imageMap = makerImageCache[maker];
-  const fileId = imageMap[normalizedProduct];
+  const fileId = findMatchingImageId(imageMap, normalizedProduct);
   return fileId ? buildDriveImageUrl(fileId) || buildDriveViewUrl(fileId) : '';
 }
 
@@ -184,6 +184,26 @@ function buildMakerImageMap(folder) {
     map[nameKey] = file.getId();
   }
   return map;
+}
+
+function findMatchingImageId(imageMap, normalizedProduct) {
+  if (!imageMap || !normalizedProduct) return '';
+
+  if (imageMap[normalizedProduct]) return imageMap[normalizedProduct];
+
+  const keys = Object.keys(imageMap);
+
+  const forwardMatch = keys
+    .filter((key) => key.startsWith(normalizedProduct))
+    .sort((a, b) => a.length - b.length);
+  if (forwardMatch.length) return imageMap[forwardMatch[0]];
+
+  const reverseMatch = keys
+    .filter((key) => normalizedProduct.startsWith(key))
+    .sort((a, b) => b.length - a.length);
+  if (reverseMatch.length) return imageMap[reverseMatch[0]];
+
+  return '';
 }
 
 function getMakerFolder(maker) {
