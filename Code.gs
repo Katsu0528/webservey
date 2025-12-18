@@ -13,6 +13,7 @@ const RESPONSE_SHEET_NAME = 'Responses';
 
 const makerFolderCache = {};
 const makerImageCache = {};
+const imageDataCache = {};
 let productRootFolder;
 
 const CATEGORY_SHEETS = [
@@ -138,10 +139,12 @@ function getVendorImages() {
     const file = iterator.next();
     const mime = file.getMimeType() || '';
     if (!mime.startsWith('image/')) continue;
+    const url = buildDriveImageUrl(file.getId()) || buildDriveViewUrl(file.getId());
+    if (!url) continue;
     images.push({
       id: file.getId(),
       name: file.getName(),
-      url: buildDriveViewUrl(file.getId()),
+      url,
     });
   }
 
@@ -166,7 +169,7 @@ function getProductImageUrlFromDrive(rawMaker, product) {
 
   const imageMap = makerImageCache[maker];
   const fileId = imageMap[normalizedProduct];
-  return fileId ? buildDriveViewUrl(fileId) : '';
+  return fileId ? buildDriveImageUrl(fileId) || buildDriveViewUrl(fileId) : '';
 }
 
 function buildMakerImageMap(folder) {
@@ -235,13 +238,34 @@ function normalizeImageUrl(rawValue) {
 
   // Drive の共有 URL / ID を正規化
   const driveId = extractDriveId(value);
-  if (driveId) return buildDriveViewUrl(driveId);
+  if (driveId) return buildDriveImageUrl(driveId) || buildDriveViewUrl(driveId);
 
   return '';
 }
 
 function extractDriveId(url) {
   if (!url) return '';
-  const idMatch = url.match(/[-\\w]{25,}/);
+  const idMatch = url.match(/[-\w]{25,}/);
   return idMatch ? idMatch[0] : '';
+}
+
+function buildDriveImageUrl(fileId) {
+  if (!fileId) return '';
+  return getDriveImageDataUrl(fileId);
+}
+
+function getDriveImageDataUrl(fileId) {
+  if (!fileId) return '';
+  if (imageDataCache[fileId] !== undefined) return imageDataCache[fileId];
+  try {
+    const file = DriveApp.getFileById(fileId);
+    const blob = file.getBlob();
+    const mimeType = blob.getContentType() || 'image/png';
+    const dataUrl = `data:${mimeType};base64,${Utilities.base64Encode(blob.getBytes())}`;
+    imageDataCache[fileId] = dataUrl;
+    return dataUrl;
+  } catch (e) {
+    imageDataCache[fileId] = '';
+    return '';
+  }
 }
