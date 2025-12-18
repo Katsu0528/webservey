@@ -39,13 +39,7 @@ function include(filename) {
 }
 
 function getInitialData() {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheetDataMap = buildSheetDataMap(ss);
-  const categories = CATEGORY_SHEETS.map((cat) => ({
-    name: cat.key,
-    sheetName: cat.sheetName,
-    items: buildCategoryItems(cat.sheetName, cat.key, sheetDataMap[cat.sheetName]),
-  }));
+  const categories = buildCategoriesFromDrive();
 
   return {
     categories,
@@ -128,62 +122,6 @@ function appendAggregateRows(ss, email, rankedProducts, freeText) {
       idx === 0 ? freeText || '' : '',
     ]);
   });
-}
-
-function buildCategoryItems(sheetName, folderName, sheetData) {
-  const data = sheetData || {};
-  const items = [];
-  const matchedKeys = new Set();
-
-  const folder = getCategoryFolder(folderName);
-  if (folder) {
-    collectCategoryFolderItems(folder, sheetName, data, matchedKeys, items);
-  }
-
-  Object.keys(data).forEach((key) => {
-    if (matchedKeys.has(key)) return;
-    const row = data[key];
-    const imageUrl = normalizeImageUrl(row.imageUrl) || getProductImageUrlFromDrive(row.maker, row.product, sheetName);
-    items.push({
-      product: row.product,
-      maker: row.maker,
-      price: row.price,
-      imageUrl,
-      category: sheetName,
-    });
-  });
-
-  return items;
-}
-
-function collectCategoryFolderItems(folder, sheetName, sheetData, matchedKeys, items, makerName) {
-  const fileIterator = folder.getFiles();
-  while (fileIterator.hasNext()) {
-    const file = fileIterator.next();
-    const mime = file.getMimeType() || '';
-    if (!mime.startsWith('image/')) continue;
-    const displayName = stripExtension(file.getName());
-    const key = normalizeProductKey(displayName);
-    if (!key || matchedKeys.has(key)) continue;
-
-    const row = sheetData[key];
-    matchedKeys.add(key);
-
-    items.push({
-      product: (row && row.product) || displayName,
-      maker: (row && row.maker) || makerName || '',
-      price: (row && row.price) || '',
-      imageUrl: buildDriveImageUrl(file.getId()) || buildDriveViewUrl(file.getId()),
-      category: sheetName,
-    });
-  }
-
-  const folderIterator = folder.getFolders();
-  while (folderIterator.hasNext()) {
-    const child = folderIterator.next();
-    const childMakerName = child.getName() || makerName;
-    collectCategoryFolderItems(child, sheetName, sheetData, matchedKeys, items, childMakerName);
-  }
 }
 
 function buildSheetDataMap(ss) {
@@ -433,4 +371,84 @@ function buildDriveImageUrl(fileId) {
   // `thumbnail` エンドポイントは閲覧権限が無いと 403 になるケースが増えたため、
   // 公開設定が有効なファイルならブラウザから直接参照できる preview リンクを優先する。
   return buildDrivePreviewUrl(fileId) || buildDriveViewUrl(fileId);
+}
+
+function buildCategoriesFromDrive() {
+  const root = getProductRootFolder();
+  if (!root) return [];
+
+  const categories = [];
+  const iterator = root.getFolders();
+  while (iterator.hasNext()) {
+    const categoryFolder = iterator.next();
+    const categoryName = categoryFolder.getName();
+    const items = collectCategoryItemsFromDrive(categoryFolder, categoryName);
+    categories.push({
+      name: categoryName,
+      sheetName: categoryName,
+      items,
+    });
+  }
+
+  categories.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+  categories.forEach((cat) => {
+    cat.items.sort((a, b) => {
+      const makerDiff = (a.maker || '').localeCompare(b.maker || '', 'ja');
+      if (makerDiff !== 0) return makerDiff;
+      const priceDiff = (a.price || '').localeCompare(b.price || '', 'ja', { numeric: true });
+      if (priceDiff !== 0) return priceDiff;
+      return (a.product || '').localeCompare(b.product || '', 'ja');
+    });
+  });
+
+  return categories;
+}
+
+function collectCategoryItemsFromDrive(categoryFolder, categoryName) {
+  const items = [];
+  const makerIterator = categoryFolder.getFolders();
+
+  while (makerIterator.hasNext()) {
+    const makerFolder = makerIterator.next();
+    const makerName = makerFolder.getName();
+    let hasPriceFolder = false;
+
+    const priceIterator = makerFolder.getFolders();
+    while (priceIterator.hasNext()) {
+      hasPriceFolder = true;
+      const priceFolder = priceIterator.next();
+      const priceLabel = priceFolder.getName();
+      items.push(...collectImageItems(priceFolder, { category: categoryName, maker: makerName, price: priceLabel }));
+    }
+
+    if (!hasPriceFolder) {
+      items.push(...collectImageItems(makerFolder, { category: categoryName, maker: makerName, price: '' }));
+    }
+  }
+
+  // 価格・メーカー階層以外に直下に画像がある場合のフォールバック
+  items.push(...collectImageItems(categoryFolder, { category: categoryName, maker: '', price: '' }));
+
+  return items;
+}
+
+function collectImageItems(folder, meta) {
+  const results = [];
+  const iterator = folder.getFiles();
+
+  while (iterator.hasNext()) {
+    const file = iterator.next();
+    const mime = file.getMimeType() || '';
+    if (!mime.startsWith('image/')) continue;
+    const productName = stripExtension(file.getName());
+    results.push({
+      product: productName,
+      maker: meta.maker || '',
+      price: meta.price || '',
+      imageUrl: buildDriveImageUrl(file.getId()) || buildDriveViewUrl(file.getId()),
+      category: meta.category || '',
+    });
+  }
+
+  return results;
 }
