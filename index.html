@@ -451,6 +451,90 @@
         display: block;
       }
 
+      .view {
+        display: none;
+      }
+
+      .view.active {
+        display: block;
+      }
+
+      .ranking-view {
+        margin-top: 16px;
+      }
+
+      .ranking-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .ranking-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 14px;
+        margin-top: 14px;
+      }
+
+      .ranking-card {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px;
+        background: linear-gradient(180deg, #ffffff 0%, #f8f9ff 50%, #eef1ff 100%);
+        box-shadow: var(--shadow);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        position: relative;
+      }
+
+      .ranking-card .media-frame {
+        aspect-ratio: 3 / 4;
+        min-height: 200px;
+      }
+
+      .ranking-rank {
+        font-weight: 800;
+        color: #fff;
+        background: linear-gradient(120deg, var(--accent), var(--accent-2));
+        padding: 6px 12px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 12px 24px rgba(255, 126, 182, 0.35);
+        width: fit-content;
+      }
+
+      .ranking-rank .pts {
+        background: rgba(255, 255, 255, 0.18);
+        padding: 4px 10px;
+        border-radius: 10px;
+      }
+
+      .ranking-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        flex-wrap: wrap;
+        color: #4a5066;
+        font-size: 14px;
+      }
+
+      .close-tab-btn {
+        background: #1f1f1f;
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        padding: 10px 16px;
+        font-size: 14px;
+        cursor: pointer;
+        box-shadow: 0 12px 22px rgba(0, 0, 0, 0.18);
+      }
+
       @media (max-width: 600px) {
         .selection-layout {
           grid-template-columns: 1fr;
@@ -466,64 +550,79 @@
   </head>
   <body style="margin:auto 0;padding:auto 0;">
     <div class="page">
-      <header class="hero">
-        <div class="hero-badges">
-          <span class="pill accent">New Office Break Time</span>
-          <span class="pill alt">みんなで投票</span>
-        </div>
-        <h1>🎉 新オフィスの自販機、みんなで決めちゃおう!</h1>
-        <p class="lead">
-          新しいオフィスに設置する自販機を、あなたの一票で決定します! 毎日のブレイクタイムを最高にするため、みんなの「飲みたい!」を教えてください✨
-        </p>
-        <div class="hero-badges">
-          <span class="pill">画像をポチッと押すだけ</span>
-          <span class="pill">リアルタイムにカウント</span>
-          <span class="pill">自由記入も大歓迎</span>
-        </div>
-      </header>
-
-      <section id="q1">
-        <div class="section-header">
-          <div>
-            <p class="eyebrow">STEP 1</p>
-            <h2>☕ あなたの推しドリンクTOP3を教えて!</h2>
-            <p class="section-lead">
-              カテゴリーを選ぶと、ズラリと商品が登場! 画像をポチッと押した順番が「1位→3pt / 2位→2pt / 3位→1pt」で集計されます。
-              <br />右の順位枠（1位/2位/3位）をクリックしてアクティブにし、商品画像を押すとその順位が入れ替わります。
-            </p>
+      <div id="form-view" class="view active">
+        <header class="hero">
+          <div class="hero-badges">
+            <span class="pill accent">New Office Break Time</span>
+            <span class="pill alt">みんなで投票</span>
           </div>
-          <div class="counter" id="product-count">0/3</div>
-        </div>
-        <div class="note">
-          カテゴリータブを切り替えると、そのカテゴリのドリンクが表示されます。重複を選んだ場合は古いほうの順位が解除されます。
-        </div>
-        <div class="selection-layout">
-          <div class="vending-area">
-            <div class="category-tabs" id="category-tabs"></div>
-            <div class="vending-window">
-              <div id="product-grid" class="card-grid"></div>
+          <h1>🎉 新オフィスの自販機、みんなで決めちゃおう!</h1>
+          <p class="lead">
+            新しいオフィスに設置する自販機を、あなたの一票で決定します! 毎日のブレイクタイムを最高にするため、みんなの「飲みたい!」を教えてください✨
+          </p>
+          <div class="hero-badges">
+            <span class="pill">画像をポチッと押すだけ</span>
+            <span class="pill">リアルタイムにカウント</span>
+            <span class="pill">自由記入も大歓迎</span>
+          </div>
+        </header>
+
+        <section id="q1">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">STEP 1</p>
+              <h2>☕ あなたの推しドリンクTOP3を教えて!</h2>
+              <p class="section-lead">
+                カテゴリーを選ぶと、ズラリと商品が登場! 画像をポチッと押した順番が「1位→3pt / 2位→2pt / 3位→1pt」で集計されます。
+                <br />右の順位枠（1位/2位/3位）をクリックしてアクティブにし、商品画像を押すとその順位が入れ替わります。
+              </p>
             </div>
+            <div class="counter" id="product-count">0/3</div>
           </div>
-          <aside class="selection-panel">
-            <h3>あなたのTOP3</h3>
-            <div class="rank-list" id="rank-list"></div>
-          </aside>
+          <div class="note">
+            カテゴリータブを切り替えると、そのカテゴリのドリンクが表示されます。重複を選んだ場合は古いほうの順位が解除されます。
+          </div>
+          <div class="selection-layout">
+            <div class="vending-area">
+              <div class="category-tabs" id="category-tabs"></div>
+              <div class="vending-window">
+                <div id="product-grid" class="card-grid"></div>
+              </div>
+            </div>
+            <aside class="selection-panel">
+              <h3>あなたのTOP3</h3>
+              <div class="rank-list" id="rank-list"></div>
+            </aside>
+          </div>
+        </section>
+
+        <section id="q2">
+          <p class="eyebrow">STEP 2</p>
+          <h2>💭 あなたの「こんな自販機だったら最高!」を聞かせて (任意)</h2>
+          <textarea
+            id="free-text"
+            placeholder="「この幻のドリンクを入れてほしい!」「100円台の商品を充実させて!」など、夢や希望、なんでもOK! 自由にご記入ください🎤"
+          ></textarea>
+        </section>
+
+        <div class="actions">
+          <button class="primary" id="submit-btn">この内容で送信する 🚀</button>
+          <div class="status" id="status"></div>
         </div>
-      </section>
-
-      <section id="q2">
-        <p class="eyebrow">STEP 2</p>
-        <h2>💭 あなたの「こんな自販機だったら最高!」を聞かせて (任意)</h2>
-        <textarea
-          id="free-text"
-          placeholder="「この幻のドリンクを入れてほしい!」「100円台の商品を充実させて!」など、夢や希望、なんでもOK! 自由にご記入ください🎤"
-        ></textarea>
-      </section>
-
-      <div class="actions">
-        <button class="primary" id="submit-btn">この内容で送信する 🚀</button>
-        <div class="status" id="status"></div>
       </div>
+
+      <section id="ranking-view" class="view ranking-view">
+        <div class="ranking-header">
+          <div>
+            <p class="eyebrow">結果ページ</p>
+            <h2>🏆 みんなの現在の順位</h2>
+            <p class="section-lead">最新のPt順で、商品名とメーカーを画像付きで表示します。</p>
+          </div>
+          <button class="close-tab-btn" id="close-tab-btn">この画面を閉じる</button>
+        </div>
+        <div class="status" id="ranking-status">最新の順位を読み込んでいます...</div>
+        <div id="ranking-list" class="ranking-grid"></div>
+      </section>
     </div>
 
     <script>
@@ -545,11 +644,31 @@
         submit: document.getElementById('submit-btn'),
         freeText: document.getElementById('free-text'),
         rankList: document.getElementById('rank-list'),
+        formView: document.getElementById('form-view'),
+        rankingView: document.getElementById('ranking-view'),
+        rankingStatus: document.getElementById('ranking-status'),
+        rankingList: document.getElementById('ranking-list'),
+        closeTabBtn: document.getElementById('close-tab-btn'),
       };
+
+      const viewState = { current: 'form' };
 
       function setStatus(message, isError = false) {
         els.status.textContent = message || '';
         els.status.classList.toggle('error', Boolean(isError));
+      }
+
+      function setRankingStatus(message, isError = false) {
+        if (!els.rankingStatus) return;
+        els.rankingStatus.textContent = message || '';
+        els.rankingStatus.classList.toggle('error', Boolean(isError));
+      }
+
+      function switchView(target) {
+        viewState.current = target;
+        els.formView.classList.toggle('active', target === 'form');
+        els.rankingView.classList.toggle('active', target === 'ranking');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
       function createImageElement(src, alt) {
@@ -804,12 +923,75 @@
             renderProducts();
             renderRankList();
             els.submit.disabled = false;
+            fetchRankingSummary();
           })
           .withFailureHandler((err) => {
             setStatus(err?.message || '送信に失敗しました。少し時間をおいて、もう一度お試しください。', true);
             els.submit.disabled = false;
           })
           .submitResponse(payload);
+      }
+
+      function fetchRankingSummary() {
+        if (!els.rankingStatus || !els.rankingList) return;
+        setRankingStatus('最新の順位を読み込んでいます...');
+        els.rankingList.innerHTML = '';
+        switchView('ranking');
+
+        google.script.run
+          .withSuccessHandler((data) => {
+            renderRankingList(data || []);
+            setRankingStatus(data?.length ? '' : 'まだ集計データがありません。最初の投票をお待ちしています。');
+          })
+          .withFailureHandler((err) => {
+            setRankingStatus(err?.message || '順位の取得に失敗しました。少し時間をおいて再度お試しください。', true);
+          })
+          .getRankingSummary();
+      }
+
+      function renderRankingList(items) {
+        els.rankingList.innerHTML = '';
+        if (!items || !items.length) return;
+
+        items.forEach((item, idx) => {
+          const card = document.createElement('div');
+          card.className = 'ranking-card';
+
+          const rank = document.createElement('div');
+          rank.className = 'ranking-rank';
+          rank.innerHTML = `<span>${idx + 1} 位</span><span class="pts">${item.points || 0} Pt</span>`;
+
+          const img = createImageElement(item.imageUrl, item.product);
+
+          const title = document.createElement('h4');
+          title.textContent = item.product || '商品名不明';
+
+          const meta = document.createElement('div');
+          meta.className = 'ranking-meta';
+          const maker = document.createElement('span');
+          maker.textContent = item.maker || 'メーカー不明';
+          const count = document.createElement('span');
+          count.textContent = `${item.count || 0} 票`;
+          meta.appendChild(maker);
+          meta.appendChild(count);
+
+          const category = document.createElement('div');
+          category.className = 'muted';
+          const priceLabel = item.price ? ` / ${item.price}` : '';
+          category.textContent = `${item.category || 'カテゴリ不明'}${priceLabel}`;
+
+          card.appendChild(rank);
+          card.appendChild(img);
+          card.appendChild(title);
+          card.appendChild(meta);
+          card.appendChild(category);
+
+          els.rankingList.appendChild(card);
+        });
+      }
+
+      function closeTab() {
+        window.close();
       }
 
       function load() {
@@ -835,6 +1017,9 @@
       }
 
       els.submit.addEventListener('click', handleSubmit);
+      if (els.closeTabBtn) {
+        els.closeTabBtn.addEventListener('click', closeTab);
+      }
       document.addEventListener('DOMContentLoaded', load);
     </script>
   </body>

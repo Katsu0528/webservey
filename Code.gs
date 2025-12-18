@@ -183,6 +183,49 @@ function refreshPointSummary(sheet) {
   sheet.getRange(SUMMARY_START_ROW, SUMMARY_START_COL, output.length, headers.length).setValues(output);
 }
 
+function getRankingSummary() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(AGGREGATE_SHEET_NAME);
+  if (!sheet) return [];
+
+  const lastRow = sheet.getLastRow();
+  const DATA_COLUMNS = 9;
+  if (lastRow <= 1) return [];
+
+  const rows = sheet.getRange(2, 1, lastRow - 1, DATA_COLUMNS).getValues();
+  const summaryMap = {};
+
+  rows.forEach((row) => {
+    const timestamp = row[0];
+    if (!timestamp) return;
+    const points = Number(row[3]) || 0;
+    const category = row[4] || '';
+    const maker = row[5] || '';
+    const product = row[6] || '';
+    const price = row[7] || '';
+    const key = [category, maker, product, price].join('||');
+
+    if (!summaryMap[key]) {
+      summaryMap[key] = { category, maker, product, price, points: 0, count: 0 };
+    }
+
+    summaryMap[key].points += points;
+    summaryMap[key].count += 1;
+  });
+
+  return Object.values(summaryMap)
+    .sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      if (a.category !== b.category) return String(a.category).localeCompare(String(b.category), 'ja');
+      if (a.maker !== b.maker) return String(a.maker).localeCompare(String(b.maker), 'ja');
+      return String(a.product).localeCompare(String(b.product), 'ja');
+    })
+    .map((item) => ({
+      ...item,
+      imageUrl: getProductImageUrlFromDrive(item.maker, item.product, item.category) || '',
+    }));
+}
+
 function buildSheetDataMap(ss) {
   return CATEGORY_SHEETS.reduce((acc, cat) => {
     acc[cat.sheetName] = buildSheetRowMap(ss, cat.sheetName);
