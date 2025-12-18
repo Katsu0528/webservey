@@ -5,61 +5,128 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>自動販売機アンケート</title>
     <style>
+      @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+
       :root {
-        --accent: #1a73e8;
-        --border: #e0e0e0;
-        --muted: #f5f5f5;
+        --accent: #ff7eb6;
+        --accent-2: #6c8cff;
+        --border: #e5e7f0;
+        --muted: #f7f8ff;
+        --text: #1f2430;
+        --shadow: 0 12px 28px rgba(61, 78, 255, 0.08);
       }
 
       body {
         margin: 0;
-        font-family: 'Noto Sans JP', system-ui, -apple-system, sans-serif;
-        background: #fafafa;
-        color: #222;
+        font-family: 'Noto Sans JP', 'Baloo 2', system-ui, -apple-system, sans-serif;
+        background: radial-gradient(circle at 10% 20%, #fff3fb 0, #f1f6ff 45%, #ffffff 90%);
+        color: var(--text);
       }
 
       .page {
-        max-width: 960px;
+        max-width: 1040px;
         margin: 0 auto;
-        padding: 24px 16px 48px;
+        padding: 28px 16px 60px;
       }
 
       h1 {
-        font-size: 28px;
-        margin: 0 0 4px;
+        font-size: 30px;
+        margin: 0 0 12px;
+        letter-spacing: 0.02em;
+      }
+
+      h2 {
+        margin: 4px 0 6px;
       }
 
       p.lead {
         margin: 0 0 18px;
-        color: #444;
-        line-height: 1.5;
+        color: #3a3f52;
+        line-height: 1.7;
+      }
+
+      header.hero {
+        background: linear-gradient(120deg, rgba(255, 126, 182, 0.12), rgba(108, 140, 255, 0.12));
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 22px 20px 20px;
+        box-shadow: var(--shadow);
+      }
+
+      .hero-badges {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #fff;
+        color: var(--text);
+        border: 1px solid var(--border);
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-weight: 600;
+      }
+
+      .pill.accent {
+        background: #1f1f1f;
+        color: #fff;
+        border-color: transparent;
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+      }
+
+      .pill.alt {
+        background: #fff1f8;
+        color: #ff4f9d;
+        border-color: #ffd7eb;
       }
 
       section {
         background: #fff;
         border: 1px solid var(--border);
-        border-radius: 12px;
+        border-radius: 16px;
         padding: 18px 16px 20px;
-        margin-top: 14px;
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.03);
+        margin-top: 16px;
+        box-shadow: var(--shadow);
       }
 
       .section-header {
         display: flex;
         justify-content: space-between;
-        align-items: center;
+        align-items: flex-start;
         gap: 12px;
         flex-wrap: wrap;
       }
 
+      .section-lead {
+        margin: 0;
+        color: #4a5066;
+        line-height: 1.6;
+        font-size: 14px;
+      }
+
+      .eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-weight: 700;
+        color: #8b92b2;
+        font-size: 12px;
+        margin: 0;
+      }
+
       .counter {
-        background: #eef4ff;
-        color: #1a3f8b;
-        padding: 6px 10px;
-        border-radius: 20px;
-        font-weight: 600;
-        min-width: 76px;
+        background: linear-gradient(120deg, #ffd7eb, #dfe3ff);
+        color: #2c2c54;
+        padding: 10px 14px;
+        border-radius: 14px;
+        font-weight: 700;
+        min-width: 86px;
         text-align: center;
+        box-shadow: var(--shadow);
       }
 
       .category-tabs {
@@ -72,18 +139,20 @@
       .tab {
         border: 1px solid var(--border);
         background: #fff;
-        border-radius: 999px;
+        border-radius: 12px;
         padding: 8px 14px;
         cursor: pointer;
         transition: 0.15s;
-        font-weight: 600;
+        font-weight: 700;
+        color: #2e2f44;
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.03);
       }
 
       .tab.active {
-        background: var(--accent);
+        background: linear-gradient(120deg, var(--accent), var(--accent-2));
         color: #fff;
-        border-color: var(--accent);
-        box-shadow: 0 6px 14px rgba(26, 115, 232, 0.22);
+        border-color: transparent;
+        box-shadow: 0 8px 20px rgba(255, 126, 182, 0.35);
       }
 
       .card-grid {
@@ -94,7 +163,7 @@
 
       .card {
         border: 1px solid var(--border);
-        border-radius: 12px;
+        border-radius: 14px;
         padding: 10px;
         background: #fff;
         transition: 0.18s;
@@ -103,11 +172,12 @@
         flex-direction: column;
         gap: 8px;
         position: relative;
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.03);
       }
 
       .card:hover {
-        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
-        transform: translateY(-2px);
+        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.1);
+        transform: translateY(-3px);
       }
 
       .card.disabled {
@@ -118,11 +188,11 @@
 
       .card.selected {
         border: 2px solid var(--accent);
-        box-shadow: 0 12px 24px rgba(26, 115, 232, 0.2);
+        box-shadow: 0 16px 28px rgba(255, 126, 182, 0.26);
       }
 
       .vendor-card.dimmed {
-        filter: grayscale(0.4);
+        filter: grayscale(0.5);
         opacity: 0.45;
       }
 
@@ -130,8 +200,9 @@
         width: 100%;
         height: 160px;
         object-fit: contain;
-        border-radius: 10px;
-        background: var(--muted);
+        border-radius: 12px;
+        background: linear-gradient(145deg, #fdf3ff, #f0f5ff);
+        border: 1px solid var(--border);
       }
 
       .card h4 {
@@ -149,19 +220,20 @@
       }
 
       .card .maker {
-        font-weight: 600;
-        color: #333;
+        font-weight: 700;
+        color: #34354a;
       }
 
       textarea {
         width: 100%;
         min-height: 140px;
-        padding: 12px;
-        border-radius: 10px;
+        padding: 14px;
+        border-radius: 12px;
         border: 1px solid var(--border);
         font-size: 15px;
         resize: vertical;
         box-sizing: border-box;
+        background: #fff;
       }
 
       .actions {
@@ -169,18 +241,21 @@
         align-items: center;
         gap: 12px;
         margin-top: 18px;
+        flex-wrap: wrap;
       }
 
       button.primary {
-        background: var(--accent);
+        background: linear-gradient(120deg, var(--accent), var(--accent-2));
         color: #fff;
         border: none;
-        border-radius: 12px;
-        padding: 12px 20px;
+        border-radius: 14px;
+        padding: 12px 22px;
         font-size: 15px;
         cursor: pointer;
-        box-shadow: 0 10px 20px rgba(26, 115, 232, 0.25);
+        box-shadow: 0 14px 26px rgba(255, 126, 182, 0.35);
         transition: 0.18s;
+        font-weight: 700;
+        letter-spacing: 0.01em;
       }
 
       button.primary:disabled {
@@ -191,7 +266,18 @@
 
       .status {
         font-size: 14px;
-        color: #444;
+        color: #3c3d52;
+        padding: 10px 12px;
+        background: #f8f9ff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        min-height: 20px;
+      }
+
+      .status.error {
+        background: #fff5f8;
+        color: #d6266f;
+        border-color: #ffc0d7;
       }
 
       .badge {
@@ -218,9 +304,32 @@
         text-align: center;
       }
 
+      .note {
+        color: #4b4f65;
+        background: #fdf3ff;
+        border: 1px dashed #ffc0df;
+        padding: 10px 12px;
+        border-radius: 12px;
+        margin: 6px 0 10px;
+      }
+
+      .alert {
+        margin-top: 10px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid #ffc0d7;
+        background: #fff5f8;
+        color: #c22463;
+        display: none;
+      }
+
+      .alert.visible {
+        display: block;
+      }
+
       @media (max-width: 600px) {
         h1 {
-          font-size: 22px;
+          font-size: 24px;
         }
         .card img {
           height: 140px;
@@ -230,38 +339,65 @@
   </head>
   <body>
     <div class="page">
-      <header>
-        <h1>自動販売機アンケート</h1>
+      <header class="hero">
+        <div class="hero-badges">
+          <span class="pill accent">New Office Break Time</span>
+          <span class="pill alt">みんなで投票</span>
+        </div>
+        <h1>🎉 新オフィスの自販機、みんなで決めちゃおう!</h1>
         <p class="lead">
-          飲みたい商品、自販機メーカー、および自由記入欄へのご意見をお聞かせください。全て匿名で回答できますが、バックエンドではメールアドレスと一緒に記録されます。
+          新しいオフィスに設置する自販機を、あなたの一票で決定します! 毎日のブレイクタイムを最高にするため、みんなの「飲みたい!」を教えてください✨
         </p>
+        <div class="hero-badges">
+          <span class="pill">画像をポチッと押すだけ</span>
+          <span class="pill">リアルタイムにカウント</span>
+          <span class="pill">自由記入も大歓迎</span>
+        </div>
       </header>
 
       <section id="q1">
         <div class="section-header">
-          <h2>1. 飲みたい商品を３つまで選んでください</h2>
+          <div>
+            <p class="eyebrow">STEP 1</p>
+            <h2>☕ あなたの推しドリンクTOP3を教えて!</h2>
+            <p class="section-lead">
+              カテゴリーを選ぶと、ズラリと商品が登場! 画像をポチッと押して、お気に入りを3つまで選んでくださいね。
+              <br />（もう一度押すと解除できます）
+            </p>
+          </div>
           <div class="counter" id="product-count">0/3</div>
         </div>
-        <div class="muted">カテゴリーを選ぶと、商品が表示されます。画像をクリックで選択／解除できます。</div>
+        <div class="note">カテゴリータブを切り替えると、そのカテゴリのドリンクが表示されます。</div>
         <div class="category-tabs" id="category-tabs"></div>
         <div id="product-grid" class="card-grid"></div>
       </section>
 
       <section id="q2">
         <div class="section-header">
-          <h2>2. 自販機メーカーを１つ選んでください</h2>
+          <div>
+            <p class="eyebrow">STEP 2</p>
+            <h2>🏪 相棒になる自販機メーカーは?</h2>
+            <p class="section-lead">
+              デザイン? 品揃え? それとも使いやすさ? ピンときた1台を画像クリックで選んでください!
+              <br />（気が変わったら、もう一度クリックで選び直せます）
+            </p>
+          </div>
         </div>
-        <div class="muted">画像をクリックすると選択できます。再度クリックで解除します。</div>
+        <div class="alert" id="vendor-alert"></div>
         <div id="vendor-grid" class="card-grid vendor-grid"></div>
       </section>
 
       <section id="q3">
-        <h2>3. その他ご要望（任意）</h2>
-        <textarea id="free-text" placeholder="例）この商品を入れて欲しい、価格帯の希望などがあればご自由にご記入ください。"></textarea>
+        <p class="eyebrow">STEP 3</p>
+        <h2>💭 あなたの「こんな自販機だったら最高!」を聞かせて (任意)</h2>
+        <textarea
+          id="free-text"
+          placeholder="「この幻のドリンクを入れてほしい!」「100円台の商品を充実させて!」など、夢や希望、なんでもOK! 自由にご記入ください🎤"
+        ></textarea>
       </section>
 
       <div class="actions">
-        <button class="primary" id="submit-btn">送信</button>
+        <button class="primary" id="submit-btn">この内容で送信する 🚀</button>
         <div class="status" id="status"></div>
       </div>
     </div>
@@ -273,6 +409,7 @@
         selectedProducts: [],
         vendorImages: [],
         selectedVendor: null,
+        vendorError: '',
       };
       const FALLBACK_IMAGE =
         'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="360" height="240" viewBox="0 0 360 240"><rect width="360" height="240" fill="%23f2f4f7"/><rect x="30" y="30" width="300" height="180" rx="12" fill="none" stroke="%23c3cad4" stroke-width="8"/><path d="M96 166l48-58 48 58 48-72 24 32" fill="none" stroke="%23c3cad4" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><circle cx="138" cy="90" r="22" fill="%23d8dde5"/></svg>';
@@ -285,11 +422,12 @@
         status: document.getElementById('status'),
         submit: document.getElementById('submit-btn'),
         freeText: document.getElementById('free-text'),
+        vendorAlert: document.getElementById('vendor-alert'),
       };
 
       function setStatus(message, isError = false) {
         els.status.textContent = message || '';
-        els.status.style.color = isError ? '#d93025' : '#444';
+        els.status.classList.toggle('error', Boolean(isError));
       }
 
       function createImageElement(src, alt) {
@@ -402,10 +540,11 @@
 
       function renderVendors() {
         els.vendorGrid.innerHTML = '';
+        renderVendorAlert();
         if (!state.vendorImages.length) {
           const empty = document.createElement('div');
           empty.className = 'empty';
-          empty.textContent = '自販機メーカー画像が見つかりません。';
+          empty.textContent = state.vendorError || '自販機メーカー画像が見つかりません。';
           els.vendorGrid.appendChild(empty);
           return;
         }
@@ -453,13 +592,13 @@
         els.submit.disabled = true;
 
         if (state.selectedProducts.length === 0) {
-          setStatus('飲みたい商品を１つ以上選択してください。', true);
+          setStatus('推しドリンクを1つ以上選んでね！', true);
           els.submit.disabled = false;
           return;
         }
 
         if (!state.selectedVendor) {
-          setStatus('自販機メーカーを１つ選んでください。', true);
+          setStatus('相棒にする自販機メーカーを1つ選んでください。', true);
           els.submit.disabled = false;
           return;
         }
@@ -472,7 +611,7 @@
 
         google.script.run
           .withSuccessHandler(() => {
-            setStatus('ご回答ありがとうございました。送信が完了しました。');
+            setStatus('ご回答ありがとうございました！みんなのブレイクタイムがもっと楽しくなります。');
             state.selectedProducts = [];
             state.selectedVendor = null;
             els.freeText.value = '';
@@ -481,7 +620,7 @@
             els.submit.disabled = false;
           })
           .withFailureHandler((err) => {
-            setStatus(err?.message || '送信に失敗しました。もう一度お試しください。', true);
+            setStatus(err?.message || '送信に失敗しました。少し時間をおいて、もう一度お試しください。', true);
             els.submit.disabled = false;
           })
           .submitResponse(payload);
@@ -489,19 +628,37 @@
 
       function load() {
         setStatus('読み込み中...');
+        if (typeof google === 'undefined' || !google.script?.run) {
+          setStatus('プレビューではデータを読み込めません。Apps Script 環境でお試しください。', true);
+          els.submit.disabled = true;
+          return;
+        }
+
         google.script.run
           .withSuccessHandler((data) => {
             state.categories = data.categories || [];
             state.vendorImages = data.vendorImages || [];
+            state.vendorError = data.vendorError || '';
             renderTabs();
             renderProducts();
             renderVendors();
             setStatus('');
           })
           .withFailureHandler((err) => {
-            setStatus(err?.message || 'データの取得に失敗しました。', true);
+            setStatus(err?.message || 'データの取得に失敗しました。フォルダの権限やIDをご確認ください。', true);
           })
           .getInitialData();
+      }
+
+      function renderVendorAlert() {
+        if (!els.vendorAlert) return;
+        if (state.vendorError) {
+          els.vendorAlert.textContent = state.vendorError;
+          els.vendorAlert.classList.add('visible');
+        } else {
+          els.vendorAlert.textContent = '';
+          els.vendorAlert.classList.remove('visible');
+        }
       }
 
       els.submit.addEventListener('click', handleSubmit);

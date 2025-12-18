@@ -45,9 +45,12 @@ function getInitialData() {
     items: readCategorySheet(ss, cat.sheetName),
   }));
 
+  const vendorResult = getVendorImages();
+
   return {
     categories,
-    vendorImages: getVendorImages(),
+    vendorImages: vendorResult.images,
+    vendorError: vendorResult.error,
     email: Session.getActiveUser().getEmail() || '',
   };
 }
@@ -131,24 +134,39 @@ function isHeaderRow(row) {
 }
 
 function getVendorImages() {
-  const folder = DriveApp.getFolderById(VENDOR_FOLDER_ID);
-  const iterator = folder.getFiles();
-  const images = [];
-
-  while (iterator.hasNext()) {
-    const file = iterator.next();
-    const mime = file.getMimeType() || '';
-    if (!mime.startsWith('image/')) continue;
-    const url = buildDriveImageUrl(file.getId()) || buildDriveViewUrl(file.getId());
-    if (!url) continue;
-    images.push({
-      id: file.getId(),
-      name: file.getName(),
-      url,
-    });
+  if (!VENDOR_FOLDER_ID) {
+    return {
+      images: [],
+      error: '自販機メーカー画像フォルダのIDが設定されていません。',
+    };
   }
 
-  return images;
+  try {
+    const folder = DriveApp.getFolderById(VENDOR_FOLDER_ID);
+    const iterator = folder.getFiles();
+    const images = [];
+
+    while (iterator.hasNext()) {
+      const file = iterator.next();
+      const mime = file.getMimeType() || '';
+      if (!mime.startsWith('image/')) continue;
+      const url = buildDriveImageUrl(file.getId()) || buildDriveViewUrl(file.getId());
+      if (!url) continue;
+      images.push({
+        id: file.getId(),
+        name: file.getName(),
+        url,
+      });
+    }
+
+    return { images, error: '' };
+  } catch (e) {
+    console.warn('Failed to load vendor images from Drive', e);
+    return {
+      images: [],
+      error: 'ドライブから自販機画像を読み込めませんでした。フォルダIDや権限を確認してください。',
+    };
+  }
 }
 
 function buildDriveViewUrl(fileId) {
