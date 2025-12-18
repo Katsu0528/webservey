@@ -7,8 +7,13 @@
  */
 
 const SPREADSHEET_ID = '1xkg8vNscpcWTA6GA0VPxGTJCAH6LyvsYhq7VhOlDcXg';
+const PRODUCT_FOLDER_ID = '1asC-Vcodq52wxph2tZk6y0IpMC-QkZcC';
 const VENDOR_FOLDER_ID = '1nuVlneWO0PbmOapb_dTYoMNIWQFP45Gg';
 const RESPONSE_SHEET_NAME = 'Responses';
+
+const makerFolderCache = {};
+const makerImageCache = {};
+let productRootFolder;
 
 const CATEGORY_SHEETS = [
   { key: 'コーヒー', sheetName: 'コーヒー' },
@@ -100,11 +105,16 @@ function readCategorySheet(ss, sheetName) {
     .map((row) => {
       const product = row[0] ? String(row[0]).trim() : '';
       if (!product) return null;
+      const maker = row[1] ? String(row[1]).trim() : '';
+      const price = row[2] ? String(row[2]).trim() : '';
+
+      const imageUrlFromSheet = normalizeImageUrl(row[3]);
+      const imageUrl = imageUrlFromSheet || getProductImageUrlFromDrive(maker, product);
       return {
         product,
-        maker: row[1] ? String(row[1]).trim() : '',
-        price: row[2] ? String(row[2]).trim() : '',
-        imageUrl: normalizeImageUrl(row[3]),
+        maker,
+        price,
+        imageUrl,
         category: sheetName,
       };
     })
@@ -141,6 +151,74 @@ function getVendorImages() {
 function buildDriveViewUrl(fileId) {
   if (!fileId) return '';
   return `https://drive.google.com/uc?export=view&id=${fileId}`;
+}
+
+function getProductImageUrlFromDrive(rawMaker, product) {
+  const maker = normalizeMakerKey(rawMaker);
+  if (!PRODUCT_FOLDER_ID || !maker || !product) return '';
+  const normalizedProduct = normalizeProductKey(product);
+  const folder = getMakerFolder(maker);
+  if (!folder) return '';
+
+  if (!makerImageCache[maker]) {
+    makerImageCache[maker] = buildMakerImageMap(folder);
+  }
+
+  const imageMap = makerImageCache[maker];
+  const fileId = imageMap[normalizedProduct];
+  return fileId ? buildDriveViewUrl(fileId) : '';
+}
+
+function buildMakerImageMap(folder) {
+  const map = {};
+  const iterator = folder.getFiles();
+  while (iterator.hasNext()) {
+    const file = iterator.next();
+    const mime = file.getMimeType() || '';
+    if (!mime.startsWith('image/')) continue;
+    const nameKey = normalizeProductKey(file.getName());
+    if (!nameKey) continue;
+    map[nameKey] = file.getId();
+  }
+  return map;
+}
+
+function getMakerFolder(maker) {
+  if (makerFolderCache[maker]) return makerFolderCache[maker];
+  const root = getProductRootFolder();
+  if (!root) return null;
+
+  const iterator = root.getFoldersByName(maker);
+  makerFolderCache[maker] = iterator.hasNext() ? iterator.next() : null;
+  return makerFolderCache[maker];
+}
+
+function getProductRootFolder() {
+  if (productRootFolder !== undefined) return productRootFolder;
+  if (!PRODUCT_FOLDER_ID) {
+    productRootFolder = null;
+    return null;
+  }
+  try {
+    productRootFolder = DriveApp.getFolderById(PRODUCT_FOLDER_ID);
+    return productRootFolder;
+  } catch (e) {
+    productRootFolder = null;
+    return null;
+  }
+}
+
+function normalizeProductKey(name) {
+  if (!name) return '';
+  return String(name)
+    .trim()
+    .replace(/\.[^.]+$/, '')
+    .toLowerCase();
+}
+
+function normalizeMakerKey(name) {
+  if (!name) return '';
+  return String(name).trim();
 }
 
 function normalizeImageUrl(rawValue) {
