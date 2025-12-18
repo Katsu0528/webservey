@@ -11,6 +11,7 @@ const PRODUCT_FOLDER_ID = '18fA4HRavIBTM2aPL-OqVaWhjRRgBhlKg';
 const VENDOR_FOLDER_ID = '1AJd4BTFTVrLNep44PDz1AuwSF_5TFxdx';
 const RESPONSE_SHEET_NAME = '回答';
 
+const categoryFolderCache = {};
 const makerFolderCache = {};
 const makerImageCache = {};
 let productRootFolder;
@@ -39,10 +40,11 @@ function include(filename) {
 
 function getInitialData() {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheetDataMap = buildSheetDataMap(ss);
   const categories = CATEGORY_SHEETS.map((cat) => ({
     name: cat.key,
     sheetName: cat.sheetName,
-    items: readCategorySheet(ss, cat.sheetName),
+    items: buildCategoryItems(cat.sheetName, cat.key, sheetDataMap[cat.sheetName]),
   }));
 
   const vendorResult = getVendorImages();
@@ -98,31 +100,77 @@ function submitResponse(payload) {
   return { ok: true };
 }
 
-function readCategorySheet(ss, sheetName) {
+function buildCategoryItems(sheetName, folderName, sheetData) {
+  const data = sheetData || {};
+  const items = [];
+  const matchedKeys = new Set();
+
+  const folder = getCategoryFolder(folderName);
+  if (folder) {
+    const iterator = folder.getFiles();
+    while (iterator.hasNext()) {
+      const file = iterator.next();
+      const mime = file.getMimeType() || '';
+      if (!mime.startsWith('image/')) continue;
+      const displayName = stripExtension(file.getName());
+      const key = normalizeProductKey(displayName);
+      if (!key) continue;
+
+      const row = data[key];
+      matchedKeys.add(key);
+
+      items.push({
+        product: (row && row.product) || displayName,
+        maker: (row && row.maker) || '',
+        price: (row && row.price) || '',
+        imageUrl: buildDriveImageUrl(file.getId()) || buildDriveViewUrl(file.getId()),
+        category: sheetName,
+      });
+    }
+  }
+
+  Object.keys(data).forEach((key) => {
+    if (matchedKeys.has(key)) return;
+    const row = data[key];
+    const imageUrl = normalizeImageUrl(row.imageUrl) || getProductImageUrlFromDrive(row.maker, row.product);
+    items.push({
+      product: row.product,
+      maker: row.maker,
+      price: row.price,
+      imageUrl,
+      category: sheetName,
+    });
+  });
+
+  return items;
+}
+
+function buildSheetDataMap(ss) {
+  return CATEGORY_SHEETS.reduce((acc, cat) => {
+    acc[cat.sheetName] = buildSheetRowMap(ss, cat.sheetName);
+    return acc;
+  }, {});
+}
+
+function buildSheetRowMap(ss, sheetName) {
   const sheet = ss.getSheetByName(sheetName);
-  if (!sheet) return [];
+  if (!sheet) return {};
 
   const rows = sheet.getDataRange().getValues();
   const dataRows = rows.length && isHeaderRow(rows[0]) ? rows.slice(1) : rows;
 
-  return dataRows
-    .map((row) => {
-      const product = row[0] ? String(row[0]).trim() : '';
-      if (!product) return null;
-      const maker = row[1] ? String(row[1]).trim() : '';
-      const price = row[2] ? String(row[2]).trim() : '';
-
-      const imageUrlFromSheet = normalizeImageUrl(row[3]);
-      const imageUrl = imageUrlFromSheet || getProductImageUrlFromDrive(maker, product);
-      return {
-        product,
-        maker,
-        price,
-        imageUrl,
-        category: sheetName,
-      };
-    })
-    .filter(Boolean);
+  const map = {};
+  dataRows.forEach((row) => {
+    const product = row[0] ? String(row[0]).trim() : '';
+    if (!product) return;
+    const maker = row[1] ? String(row[1]).trim() : '';
+    const price = row[2] ? String(row[2]).trim() : '';
+    const imageUrl = row[3] ? String(row[3]).trim() : '';
+    const key = normalizeProductKey(product);
+    if (!key) return;
+    map[key] = { product, maker, price, imageUrl };
+  });
+  return map;
 }
 
 function isHeaderRow(row) {
@@ -259,6 +307,17 @@ function getMakerFolder(maker) {
   return makerFolderCache[maker];
 }
 
+function getCategoryFolder(categoryName) {
+  if (!categoryName) return null;
+  if (categoryFolderCache[categoryName]) return categoryFolderCache[categoryName];
+  const root = getProductRootFolder();
+  if (!root) return null;
+
+  const iterator = root.getFoldersByName(categoryName);
+  categoryFolderCache[categoryName] = iterator.hasNext() ? iterator.next() : null;
+  return categoryFolderCache[categoryName];
+}
+
 function getProductRootFolder() {
   if (productRootFolder !== undefined) return productRootFolder;
   if (!PRODUCT_FOLDER_ID) {
@@ -280,6 +339,11 @@ function normalizeProductKey(name) {
     .trim()
     .replace(/\.[^.]+$/, '')
     .toLowerCase();
+}
+
+function stripExtension(name) {
+  if (!name) return '';
+  return String(name).replace(/\.[^.]+$/, '').trim();
 }
 
 function normalizeMakerKey(name) {
