@@ -281,6 +281,12 @@
         gap: 8px;
       }
 
+      .card .price {
+        font-size: 16px;
+        font-weight: 800;
+        color: var(--accent);
+      }
+
       .card .maker {
         font-weight: 700;
         color: #34354a;
@@ -415,7 +421,7 @@
       }
     </style>
   </head>
-  <body>
+  <body style="margin:auto 0;padding:auto 0;">
     <div class="page">
       <header class="hero">
         <div class="hero-badges">
@@ -628,6 +634,7 @@
           maker.className = 'maker';
           maker.textContent = item.maker || 'メーカー不明';
           const price = document.createElement('span');
+          price.className = 'price';
           price.textContent = item.price || '';
           meta.appendChild(maker);
           meta.appendChild(price);
