@@ -169,11 +169,6 @@ function getVendorImages() {
   }
 }
 
-function buildDriveViewUrl(fileId) {
-  if (!fileId) return '';
-  return `https://drive.google.com/uc?export=view&id=${fileId}`;
-}
-
 function getProductImageUrlFromDrive(rawMaker, product) {
   if (!PRODUCT_FOLDER_ID || !product) return '';
   const normalizedProduct = normalizeProductKey(product);
@@ -317,9 +312,19 @@ function extractDriveId(url) {
   return idMatch ? idMatch[0] : '';
 }
 
+function buildDrivePreviewUrl(fileId) {
+  if (!fileId) return '';
+  return `https://drive.google.com/file/d/${fileId}/preview`;
+}
+
+function buildDriveViewUrl(fileId) {
+  if (!fileId) return '';
+  return `https://drive.google.com/uc?export=view&id=${fileId}`;
+}
+
 function buildDriveImageUrl(fileId) {
   if (!fileId) return '';
   // `thumbnail` エンドポイントは閲覧権限が無いと 403 になるケースが増えたため、
-  // 公開設定が有効なファイルならブラウザから直接参照できる view リンクを優先する。
-  return `https://drive.google.com/uc?export=view&id=${fileId}`;
+  // 公開設定が有効なファイルならブラウザから直接参照できる preview リンクを優先する。
+  return buildDrivePreviewUrl(fileId) || buildDriveViewUrl(fileId);
 }

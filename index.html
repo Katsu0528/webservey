@@ -196,13 +196,21 @@
         opacity: 0.45;
       }
 
-      .card img {
+      .media-frame {
         width: 100%;
         height: 160px;
-        object-fit: contain;
         border-radius: 12px;
         background: linear-gradient(145deg, #fdf3ff, #f0f5ff);
         border: 1px solid var(--border);
+        overflow: hidden;
+      }
+
+      .media-frame iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        background: transparent;
+        pointer-events: none;
       }
 
       .card h4 {
@@ -331,7 +339,7 @@
         h1 {
           font-size: 24px;
         }
-        .card img {
+        .media-frame {
           height: 140px;
         }
       }
@@ -431,16 +439,50 @@
       }
 
       function createImageElement(src, alt) {
-        const img = document.createElement('img');
-        img.src = src || FALLBACK_IMAGE;
-        img.alt = alt || '';
-        img.loading = 'lazy';
-        img.addEventListener('error', () => {
-          if (img.dataset.fallbackApplied) return;
-          img.dataset.fallbackApplied = 'true';
-          img.src = FALLBACK_IMAGE;
-        });
-        return img;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'media-frame';
+
+        const iframe = document.createElement('iframe');
+        iframe.title = alt || 'image preview';
+        iframe.loading = 'lazy';
+        iframe.referrerPolicy = 'no-referrer';
+
+        const applyFallback = () => {
+          if (iframe.dataset.fallbackApplied) return;
+          iframe.dataset.fallbackApplied = 'true';
+          iframe.srcdoc = `
+            <style>
+              html,body {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: linear-gradient(145deg, #fdf3ff, #f0f5ff);
+                font-family: 'Noto Sans JP', system-ui, sans-serif;
+                color: #6b7280;
+              }
+              img {
+                max-width: 90%;
+                max-height: 90%;
+                object-fit: contain;
+              }
+            </style>
+            <img src="${FALLBACK_IMAGE}" alt="画像を読み込めませんでした" />
+          `;
+        };
+
+        if (src) {
+          iframe.src = src;
+        } else {
+          applyFallback();
+        }
+
+        iframe.addEventListener('error', applyFallback);
+        wrapper.appendChild(iframe);
+        return wrapper;
       }
 
       function updateCount() {
