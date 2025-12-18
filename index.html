@@ -191,9 +191,63 @@
         box-shadow: 0 16px 28px rgba(255, 126, 182, 0.26);
       }
 
-      .vendor-card.dimmed {
-        filter: grayscale(0.5);
-        opacity: 0.45;
+      .selection-layout {
+        display: grid;
+        grid-template-columns: 2.2fr 1fr;
+        gap: 16px;
+        align-items: start;
+      }
+
+      .selection-panel {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        background: #fff;
+        box-shadow: var(--shadow);
+      }
+
+      .selection-panel h3 {
+        margin: 0 0 10px;
+        font-size: 16px;
+      }
+
+      .rank-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .rank-item {
+        border: 1px dashed var(--border);
+        border-radius: 10px;
+        padding: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        transition: border-color 0.15s, box-shadow 0.15s;
+      }
+
+      .rank-item.active {
+        border-color: var(--accent);
+        box-shadow: 0 10px 20px rgba(255, 126, 182, 0.15);
+      }
+
+      .rank-label {
+        font-weight: 800;
+        color: #2e2f44;
+        min-width: 70px;
+      }
+
+      .rank-content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 14px;
+      }
+
+      .rank-empty {
+        color: #7b819a;
       }
 
       .media-frame {
@@ -301,6 +355,19 @@
         font-size: 12px;
       }
 
+      .rank-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: linear-gradient(120deg, var(--accent), var(--accent-2));
+        color: #fff;
+        padding: 4px 10px;
+        border-radius: 10px;
+        font-weight: 800;
+        font-size: 12px;
+        box-shadow: 0 10px 20px rgba(255, 126, 182, 0.35);
+      }
+
       .muted {
         color: #666;
       }
@@ -336,6 +403,9 @@
       }
 
       @media (max-width: 600px) {
+        .selection-layout {
+          grid-template-columns: 1fr;
+        }
         h1 {
           font-size: 24px;
         }
@@ -369,34 +439,29 @@
             <p class="eyebrow">STEP 1</p>
             <h2>☕ あなたの推しドリンクTOP3を教えて!</h2>
             <p class="section-lead">
-              カテゴリーを選ぶと、ズラリと商品が登場! 画像をポチッと押して、お気に入りを3つまで選んでくださいね。
-              <br />（もう一度押すと解除できます）
+              カテゴリーを選ぶと、ズラリと商品が登場! 画像をポチッと押した順番が「1位→3pt / 2位→2pt / 3位→1pt」で集計されます。
+              <br />右の順位枠（1位/2位/3位）をクリックしてアクティブにし、商品画像を押すとその順位が入れ替わります。
             </p>
           </div>
           <div class="counter" id="product-count">0/3</div>
         </div>
-        <div class="note">カテゴリータブを切り替えると、そのカテゴリのドリンクが表示されます。</div>
-        <div class="category-tabs" id="category-tabs"></div>
-        <div id="product-grid" class="card-grid"></div>
+        <div class="note">
+          カテゴリータブを切り替えると、そのカテゴリのドリンクが表示されます。重複を選んだ場合は古いほうの順位が解除されます。
+        </div>
+        <div class="selection-layout">
+          <div>
+            <div class="category-tabs" id="category-tabs"></div>
+            <div id="product-grid" class="card-grid"></div>
+          </div>
+          <aside class="selection-panel">
+            <h3>あなたのTOP3</h3>
+            <div class="rank-list" id="rank-list"></div>
+          </aside>
+        </div>
       </section>
 
       <section id="q2">
-        <div class="section-header">
-          <div>
-            <p class="eyebrow">STEP 2</p>
-            <h2>🏪 相棒になる自販機メーカーは?</h2>
-            <p class="section-lead">
-              デザイン? 品揃え? それとも使いやすさ? ピンときた1台を画像クリックで選んでください!
-              <br />（気が変わったら、もう一度クリックで選び直せます）
-            </p>
-          </div>
-        </div>
-        <div class="alert" id="vendor-alert"></div>
-        <div id="vendor-grid" class="card-grid vendor-grid"></div>
-      </section>
-
-      <section id="q3">
-        <p class="eyebrow">STEP 3</p>
+        <p class="eyebrow">STEP 2</p>
         <h2>💭 あなたの「こんな自販機だったら最高!」を聞かせて (任意)</h2>
         <textarea
           id="free-text"
@@ -414,23 +479,21 @@
       const state = {
         categories: [],
         selectedCategory: null,
-        selectedProducts: [],
-        vendorImages: [],
-        selectedVendor: null,
-        vendorError: '',
+        selectedProducts: [null, null, null],
+        activeRank: 0,
       };
       const FALLBACK_IMAGE =
         'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="360" height="240" viewBox="0 0 360 240"><rect width="360" height="240" fill="%23f2f4f7"/><rect x="30" y="30" width="300" height="180" rx="12" fill="none" stroke="%23c3cad4" stroke-width="8"/><path d="M96 166l48-58 48 58 48-72 24 32" fill="none" stroke="%23c3cad4" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><circle cx="138" cy="90" r="22" fill="%23d8dde5"/></svg>';
+      const RANK_POINTS = [3, 2, 1];
 
       const els = {
         tabs: document.getElementById('category-tabs'),
         productGrid: document.getElementById('product-grid'),
-        vendorGrid: document.getElementById('vendor-grid'),
         count: document.getElementById('product-count'),
         status: document.getElementById('status'),
         submit: document.getElementById('submit-btn'),
         freeText: document.getElementById('free-text'),
-        vendorAlert: document.getElementById('vendor-alert'),
+        rankList: document.getElementById('rank-list'),
       };
 
       function setStatus(message, isError = false) {
@@ -490,15 +553,8 @@
       }
 
       function updateCount() {
-        els.count.textContent = `${state.selectedProducts.length}/3`;
-        const limitReached = state.selectedProducts.length >= 3;
-        document.querySelectorAll('.product-card').forEach((card) => {
-          if (limitReached && !card.classList.contains('selected')) {
-            card.classList.add('disabled');
-          } else {
-            card.classList.remove('disabled');
-          }
-        });
+        const filled = state.selectedProducts.filter(Boolean).length;
+        els.count.textContent = `${filled}/3`;
       }
 
       function renderTabs() {
@@ -534,9 +590,16 @@
         category.items.forEach((item) => {
           const card = document.createElement('div');
           card.className = 'card product-card';
+          const rankIndex = state.selectedProducts.findIndex(
+            (p) => p && p.category === item.category && p.product === item.product
+          );
 
-          if (state.selectedProducts.some((p) => p.category === item.category && p.product === item.product)) {
+          if (rankIndex >= 0) {
             card.classList.add('selected');
+            const rankBadge = document.createElement('span');
+            rankBadge.className = 'rank-badge';
+            rankBadge.textContent = `${rankIndex + 1}位 / ${RANK_POINTS[rankIndex]}pt`;
+            card.appendChild(rankBadge);
           }
 
           const img = createImageElement(item.imageUrl, item.product);
@@ -562,107 +625,99 @@
           card.appendChild(meta);
           card.appendChild(title);
 
-          card.addEventListener('click', () => toggleProduct(item, card));
+          card.addEventListener('click', () => assignProductToActiveRank(item));
           els.productGrid.appendChild(card);
         });
 
         updateCount();
       }
 
-      function toggleProduct(item, card) {
-        const exists = state.selectedProducts.findIndex(
-          (p) => p.category === item.category && p.product === item.product
+      function assignProductToActiveRank(item) {
+        const now = Date.now();
+        const active = state.activeRank ?? 0;
+        const duplicateIndex = state.selectedProducts.findIndex(
+          (p) => p && p.category === item.category && p.product === item.product
         );
 
-        if (exists >= 0) {
-          state.selectedProducts.splice(exists, 1);
-          card.classList.remove('selected');
-        } else if (state.selectedProducts.length < 3) {
-          state.selectedProducts.push(item);
-          card.classList.add('selected');
+        if (duplicateIndex >= 0 && duplicateIndex !== active) {
+          state.selectedProducts[duplicateIndex] = null;
         }
-        updateCount();
+
+        state.selectedProducts[active] = { ...item, selectedAt: now };
+        renderProducts();
+        renderRankList();
       }
 
-      function renderVendors() {
-        els.vendorGrid.innerHTML = '';
-        renderVendorAlert();
-        if (!state.vendorImages.length) {
-          const empty = document.createElement('div');
-          empty.className = 'empty';
-          empty.textContent = state.vendorError || '自販機メーカー画像が見つかりません。';
-          els.vendorGrid.appendChild(empty);
-          return;
-        }
+      function renderRankList() {
+        if (!els.rankList) return;
+        els.rankList.innerHTML = '';
 
-        state.vendorImages.forEach((vendor) => {
-          const card = document.createElement('div');
-          card.className = 'card vendor-card';
-          if (state.selectedVendor && state.selectedVendor.id === vendor.id) {
-            card.classList.add('selected');
-          } else if (state.selectedVendor) {
-            card.classList.add('dimmed');
-          }
-
-          const img = createImageElement(vendor.url, vendor.name);
-          const title = document.createElement('h4');
-          title.textContent = vendor.name;
-
-          card.appendChild(img);
-          card.appendChild(title);
-
-          card.addEventListener('click', () => {
-            if (state.selectedVendor && state.selectedVendor.id === vendor.id) {
-              state.selectedVendor = null;
-              card.classList.remove('selected');
-            } else {
-              state.selectedVendor = vendor;
-              document.querySelectorAll('.vendor-card').forEach((c) => c.classList.remove('selected', 'dimmed'));
-              card.classList.add('selected');
-            }
-            document.querySelectorAll('.vendor-card').forEach((c) => {
-              if (state.selectedVendor && !c.classList.contains('selected')) {
-                c.classList.add('dimmed');
-              } else {
-                c.classList.remove('dimmed');
-              }
-            });
+        const labels = ['1位 (3pt)', '2位 (2pt)', '3位 (1pt)'];
+        state.selectedProducts.forEach((item, idx) => {
+          const row = document.createElement('div');
+          row.className = 'rank-item' + (state.activeRank === idx ? ' active' : '');
+          row.addEventListener('click', () => {
+            state.activeRank = idx;
+            renderRankList();
           });
 
-          els.vendorGrid.appendChild(card);
+          const label = document.createElement('div');
+          label.className = 'rank-label';
+          label.textContent = labels[idx];
+
+          const content = document.createElement('div');
+          content.className = 'rank-content';
+
+          if (item) {
+            const title = document.createElement('div');
+            title.textContent = item.product;
+            const meta = document.createElement('div');
+            meta.className = 'muted';
+            meta.textContent = `${item.category} / ${item.maker || 'メーカー不明'} / ${item.price || ''}`;
+            content.appendChild(title);
+            content.appendChild(meta);
+          } else {
+            const empty = document.createElement('div');
+            empty.className = 'rank-empty';
+            empty.textContent = '未選択';
+            content.appendChild(empty);
+          }
+
+          row.appendChild(label);
+          row.appendChild(content);
+          els.rankList.appendChild(row);
         });
+        updateCount();
       }
 
       function handleSubmit() {
         setStatus('');
         els.submit.disabled = true;
 
-        if (state.selectedProducts.length === 0) {
-          setStatus('推しドリンクを1つ以上選んでね！', true);
-          els.submit.disabled = false;
-          return;
-        }
-
-        if (!state.selectedVendor) {
-          setStatus('相棒にする自販機メーカーを1つ選んでください。', true);
+        const filledProducts = state.selectedProducts.filter(Boolean);
+        if (filledProducts.length !== 3) {
+          setStatus('推しドリンクTOP3を3つ選んで、1位から3位まで順位をつけてください。', true);
           els.submit.disabled = false;
           return;
         }
 
         const payload = {
-          selectedProducts: state.selectedProducts,
-          vendorImage: state.selectedVendor,
+          selectedProducts: state.selectedProducts.map((p) => {
+            if (!p) return null;
+            const { selectedAt, ...rest } = p;
+            return rest;
+          }),
           freeText: els.freeText.value.trim(),
         };
 
         google.script.run
           .withSuccessHandler(() => {
-            setStatus('ご回答ありがとうございました！みんなのブレイクタイムがもっと楽しくなります。');
-            state.selectedProducts = [];
-            state.selectedVendor = null;
+            setStatus('ご回答ありがとうございました！みんなの推しTOP3を集計します。');
+            state.selectedProducts = [null, null, null];
+            state.activeRank = 0;
             els.freeText.value = '';
             renderProducts();
-            renderVendors();
+            renderRankList();
             els.submit.disabled = false;
           })
           .withFailureHandler((err) => {
@@ -683,28 +738,15 @@
         google.script.run
           .withSuccessHandler((data) => {
             state.categories = data.categories || [];
-            state.vendorImages = data.vendorImages || [];
-            state.vendorError = data.vendorError || '';
             renderTabs();
             renderProducts();
-            renderVendors();
+            renderRankList();
             setStatus('');
           })
           .withFailureHandler((err) => {
             setStatus(err?.message || 'データの取得に失敗しました。フォルダの権限やIDをご確認ください。', true);
           })
           .getInitialData();
-      }
-
-      function renderVendorAlert() {
-        if (!els.vendorAlert) return;
-        if (state.vendorError) {
-          els.vendorAlert.textContent = state.vendorError;
-          els.vendorAlert.classList.add('visible');
-        } else {
-          els.vendorAlert.textContent = '';
-          els.vendorAlert.classList.remove('visible');
-        }
       }
 
       els.submit.addEventListener('click', handleSubmit);

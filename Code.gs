@@ -2,14 +2,14 @@
  * 自動販売機アンケート（Apps Script）
  *
  * - スプレッドシートの各カテゴリーシートから商品情報を取得
- * - ドライブフォルダから自販機メーカー画像を取得
  * - 回答を「回答」シートへ保存（メールアドレスはバックエンドで取得）
  */
 
 const SPREADSHEET_ID = '1xkg8vNscpcWTA6GA0VPxGTJCAH6LyvsYhq7VhOlDcXg';
 const PRODUCT_FOLDER_ID = '18fA4HRavIBTM2aPL-OqVaWhjRRgBhlKg';
-const VENDOR_FOLDER_ID = '1AJd4BTFTVrLNep44PDz1AuwSF_5TFxdx';
 const RESPONSE_SHEET_NAME = '回答';
+const AGGREGATE_SHEET_NAME = '集計';
+const RANK_POINTS = [3, 2, 1];
 
 const categoryFolderCache = {};
 const makerFolderCache = {};
@@ -47,57 +47,87 @@ function getInitialData() {
     items: buildCategoryItems(cat.sheetName, cat.key, sheetDataMap[cat.sheetName]),
   }));
 
-  const vendorResult = getVendorImages();
-
   return {
     categories,
-    vendorImages: vendorResult.images,
-    vendorError: vendorResult.error,
     email: Session.getActiveUser().getEmail() || '',
   };
 }
 
 function submitResponse(payload) {
   if (!payload) throw new Error('送信データが見つかりません。');
-  const products = Array.isArray(payload.selectedProducts) ? payload.selectedProducts : [];
-  if (products.length === 0) throw new Error('飲みたい商品を１つ以上選択してください。');
-  if (products.length > 3) throw new Error('選択できる商品は３つまでです。');
-
-  const vendor = payload.vendorImage || {};
-  if (!vendor.id) throw new Error('自販機メーカーを１つ選択してください。');
+  const products = Array.isArray(payload.selectedProducts)
+    ? payload.selectedProducts.filter((p) => p && p.product).slice(0, 3)
+    : [];
+  if (products.length !== 3) throw new Error('推しドリンクのTOP3を1位から3位まで選択してください。');
 
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const email = Session.getActiveUser().getEmail() || payload.email || 'anonymous';
+
+  appendResponseRow(ss, email, products, payload.freeText);
+  appendAggregateRows(ss, email, products, payload.freeText);
+
+  return { ok: true };
+}
+
+function appendResponseRow(ss, email, rankedProducts, freeText) {
   const sheet = ss.getSheetByName(RESPONSE_SHEET_NAME) || ss.insertSheet(RESPONSE_SHEET_NAME);
   if (sheet.getLastRow() === 0) {
     sheet.appendRow([
       'タイムスタンプ',
       'メールアドレス',
-      '選択商品（カテゴリ:メーカー/商品名/価格）',
-      '自販機メーカー画像ID',
-      '自販機メーカー名',
+      '1位（カテゴリ/メーカー/商品名/価格）',
+      '2位（カテゴリ/メーカー/商品名/価格）',
+      '3位（カテゴリ/メーカー/商品名/価格）',
       '自由記入',
     ]);
   }
 
-  const email = Session.getActiveUser().getEmail() || payload.email || 'anonymous';
-  const productText = products
-    .map((p) => {
-      const maker = p.maker ? `${p.maker}/` : '';
-      const price = p.price ? ` ${p.price}` : '';
-      return `${p.category || ''}: ${maker}${p.product}${price}`;
-    })
-    .join('\n');
+  const formatProduct = (product) => {
+    if (!product) return '';
+    const maker = product.maker ? `${product.maker}/` : '';
+    const price = product.price ? ` ${product.price}` : '';
+    return `${product.category || ''}: ${maker}${product.product || ''}${price}`.trim();
+  };
 
   sheet.appendRow([
     new Date(),
     email,
-    productText,
-    vendor.id,
-    vendor.name || '',
-    payload.freeText || '',
+    formatProduct(rankedProducts[0]),
+    formatProduct(rankedProducts[1]),
+    formatProduct(rankedProducts[2]),
+    freeText || '',
   ]);
+}
 
-  return { ok: true };
+function appendAggregateRows(ss, email, rankedProducts, freeText) {
+  const sheet = ss.getSheetByName(AGGREGATE_SHEET_NAME) || ss.insertSheet(AGGREGATE_SHEET_NAME);
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow([
+      'タイムスタンプ',
+      'メールアドレス',
+      '順位',
+      'ポイント',
+      'カテゴリ',
+      'メーカー',
+      '商品名',
+      '価格',
+      '自由記入',
+    ]);
+  }
+
+  rankedProducts.forEach((product, idx) => {
+    sheet.appendRow([
+      new Date(),
+      email,
+      `${idx + 1}位`,
+      RANK_POINTS[idx] || 0,
+      (product && product.category) || '',
+      (product && product.maker) || '',
+      (product && product.product) || '',
+      (product && product.price) || '',
+      idx === 0 ? freeText || '' : '',
+    ]);
+  });
 }
 
 function buildCategoryItems(sheetName, folderName, sheetData) {
@@ -190,42 +220,6 @@ function isHeaderRow(row) {
   const third = String(row[2] || '').trim();
   const headerWords = ['商品名', 'メーカー', 'メーカー名', '価格'];
   return headerWords.some((word) => first === word || second === word || third === word);
-}
-
-function getVendorImages() {
-  if (!VENDOR_FOLDER_ID) {
-    return {
-      images: [],
-      error: '自販機メーカー画像フォルダのIDが設定されていません。',
-    };
-  }
-
-  try {
-    const folder = DriveApp.getFolderById(VENDOR_FOLDER_ID);
-    const iterator = folder.getFiles();
-    const images = [];
-
-    while (iterator.hasNext()) {
-      const file = iterator.next();
-      const mime = file.getMimeType() || '';
-      if (!mime.startsWith('image/')) continue;
-      const url = buildDriveImageUrl(file.getId()) || buildDriveViewUrl(file.getId());
-      if (!url) continue;
-      images.push({
-        id: file.getId(),
-        name: file.getName(),
-        url,
-      });
-    }
-
-    return { images, error: '' };
-  } catch (e) {
-    console.warn('Failed to load vendor images from Drive', e);
-    return {
-      images: [],
-      error: 'ドライブから自販機画像を読み込めませんでした。フォルダIDや権限を確認してください。',
-    };
-  }
 }
 
 function getProductImageUrlFromDrive(rawMaker, product, categoryName) {
