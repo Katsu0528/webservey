@@ -319,5 +319,7 @@ function extractDriveId(url) {
 
 function buildDriveImageUrl(fileId) {
   if (!fileId) return '';
-  return `https://drive.google.com/thumbnail?id=${fileId}&sz=w640`;
+  // `thumbnail` エンドポイントは閲覧権限が無いと 403 になるケースが増えたため、
+  // 公開設定が有効なファイルならブラウザから直接参照できる view リンクを優先する。
+  return `https://drive.google.com/uc?export=view&id=${fileId}`;
 }
