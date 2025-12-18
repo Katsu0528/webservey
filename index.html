@@ -330,20 +330,6 @@
         width: 100%;
       }
 
-      .slot-indicator {
-        position: absolute;
-        bottom: 10px;
-        left: 12px;
-        right: 12px;
-        height: 8px;
-        border-radius: 999px;
-        background: linear-gradient(90deg, rgba(255, 126, 182, 0.18), rgba(108, 140, 255, 0.22));
-        box-shadow:
-          inset 0 1px 2px rgba(255, 255, 255, 0.8),
-          0 1px 6px rgba(0, 0, 0, 0.08);
-        pointer-events: none;
-      }
-
       .card .maker {
         font-weight: 700;
         color: #34354a;
@@ -637,6 +623,31 @@
         els.count.textContent = `${filled}/3`;
       }
 
+      function updateProductSelections() {
+        const cards = els.productGrid.querySelectorAll('.product-card');
+        cards.forEach((card) => {
+          const { category, product } = card.dataset;
+          const rankIndex = state.selectedProducts.findIndex(
+            (p) => p && p.category === category && p.product === product
+          );
+          const hasRank = rankIndex >= 0;
+          card.classList.toggle('selected', hasRank);
+
+          let rankBadge = card.querySelector('.rank-badge');
+          if (hasRank) {
+            if (!rankBadge) {
+              rankBadge = document.createElement('span');
+              rankBadge.className = 'rank-badge';
+              card.insertBefore(rankBadge, card.firstChild);
+            }
+            rankBadge.textContent = `${rankIndex + 1}位 / ${RANK_POINTS[rankIndex]}pt`;
+          } else if (rankBadge) {
+            rankBadge.remove();
+          }
+        });
+        updateCount();
+      }
+
       function renderTabs() {
         els.tabs.innerHTML = '';
         state.categories.forEach((cat, idx) => {
@@ -659,6 +670,7 @@
         els.productGrid.innerHTML = '';
         const category = state.categories.find((c) => c.name === state.selectedCategory);
         if (!category || !category.items.length) {
+          delete els.productGrid.dataset.category;
           const empty = document.createElement('div');
           empty.className = 'empty';
           empty.textContent = 'このカテゴリーには商品がありません。';
@@ -667,20 +679,12 @@
           return;
         }
 
+        els.productGrid.dataset.category = category.name;
         category.items.forEach((item) => {
           const card = document.createElement('div');
           card.className = 'card product-card';
-          const rankIndex = state.selectedProducts.findIndex(
-            (p) => p && p.category === item.category && p.product === item.product
-          );
-
-          if (rankIndex >= 0) {
-            card.classList.add('selected');
-            const rankBadge = document.createElement('span');
-            rankBadge.className = 'rank-badge';
-            rankBadge.textContent = `${rankIndex + 1}位 / ${RANK_POINTS[rankIndex]}pt`;
-            card.appendChild(rankBadge);
-          }
+          card.dataset.category = item.category;
+          card.dataset.product = item.product;
 
           const img = createImageElement(item.imageUrl, item.product);
           const badge = document.createElement('span');
@@ -705,15 +709,12 @@
           card.appendChild(badge);
           card.appendChild(meta);
           card.appendChild(title);
-          const slot = document.createElement('span');
-          slot.className = 'slot-indicator';
-          card.appendChild(slot);
 
           card.addEventListener('click', () => assignProductToActiveRank(item));
           els.productGrid.appendChild(card);
         });
 
-        updateCount();
+        updateProductSelections();
       }
 
       function assignProductToActiveRank(item) {
@@ -728,7 +729,7 @@
         }
 
         state.selectedProducts[active] = { ...item, selectedAt: now };
-        renderProducts();
+        updateProductSelections();
         renderRankList();
       }
 
