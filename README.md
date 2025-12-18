@@ -9,7 +9,8 @@
    - A列: 商品名, B列: メーカー名, C列: 価格, D列: 画像URL（Driveの共有URLでOK）
    - 先頭行にヘッダー（例: 商品名 / メーカー名 / 価格 / 画像URL）があっても自動的にスキップされます。
 2. 自販機メーカー画像を格納したドライブフォルダ（5枚）を用意します。
-3. Apps Script プロジェクトのスクリプトプロパティまたはコードの定数に、スプレッドシートIDとドライブフォルダIDを設定します。
+3. 商品画像用のドライブフォルダを用意します。フォルダ直下に各メーカー（シートB列）ごとのサブフォルダを作成し、その中に商品名（シートA列）と同名の画像ファイルを配置してください。画像URL列（D列）が空の場合でも、このフォルダ構成から自動で画像を引き当てます。
+4. Apps Script プロジェクトのスクリプトプロパティまたはコードの定数に、スプレッドシートIDとドライブフォルダIDを設定します。
 
 ## セットアップ手順
 
@@ -17,6 +18,7 @@
 2. `Code.gs` 冒頭の定数を環境に合わせて設定します。
    ```js
    const SPREADSHEET_ID = '1xkg8vNscpcWTA6GA0VPxGTJCAH6LyvsYhq7VhOlDcXg';
+   const PRODUCT_FOLDER_ID = '1asC-Vcodq52wxph2tZk6y0IpMC-QkZcC';
    const VENDOR_FOLDER_ID = '1nuVlneWO0PbmOapb_dTYoMNIWQFP45Gg';
    ```
 3. 必要に応じて `Responses` シートが自動作成されるため、回答保存用のシートを事前に用意する必要はありません。
