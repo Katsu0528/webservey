@@ -13,8 +13,8 @@ const RESPONSE_SHEET_NAME = '回答';
 
 const makerFolderCache = {};
 const makerImageCache = {};
-const imageDataCache = {};
 let productRootFolder;
+let productImageMap;
 
 const CATEGORY_SHEETS = [
   { key: 'コーヒー', sheetName: 'コーヒー' },
@@ -157,9 +157,16 @@ function buildDriveViewUrl(fileId) {
 }
 
 function getProductImageUrlFromDrive(rawMaker, product) {
-  const maker = normalizeMakerKey(rawMaker);
-  if (!PRODUCT_FOLDER_ID || !maker || !product) return '';
+  if (!PRODUCT_FOLDER_ID || !product) return '';
   const normalizedProduct = normalizeProductKey(product);
+
+  const rootImageMap = getProductImageMap();
+  const rootFileId = findMatchingImageId(rootImageMap, normalizedProduct);
+  if (rootFileId) return buildDriveImageUrl(rootFileId) || buildDriveViewUrl(rootFileId);
+
+  const maker = normalizeMakerKey(rawMaker);
+  if (!maker) return '';
+
   const folder = getMakerFolder(maker);
   if (!folder) return '';
 
@@ -184,6 +191,29 @@ function buildMakerImageMap(folder) {
     map[nameKey] = file.getId();
   }
   return map;
+}
+
+function getProductImageMap() {
+  if (productImageMap !== undefined) return productImageMap;
+  const root = getProductRootFolder();
+  if (!root) {
+    productImageMap = null;
+    return null;
+  }
+
+  const map = {};
+  const iterator = root.getFiles();
+  while (iterator.hasNext()) {
+    const file = iterator.next();
+    const mime = file.getMimeType() || '';
+    if (!mime.startsWith('image/')) continue;
+    const nameKey = normalizeProductKey(file.getName());
+    if (!nameKey) continue;
+    map[nameKey] = file.getId();
+  }
+
+  productImageMap = map;
+  return productImageMap;
 }
 
 function findMatchingImageId(imageMap, normalizedProduct) {
@@ -271,21 +301,5 @@ function extractDriveId(url) {
 
 function buildDriveImageUrl(fileId) {
   if (!fileId) return '';
-  return getDriveImageDataUrl(fileId);
-}
-
-function getDriveImageDataUrl(fileId) {
-  if (!fileId) return '';
-  if (imageDataCache[fileId] !== undefined) return imageDataCache[fileId];
-  try {
-    const file = DriveApp.getFileById(fileId);
-    const blob = file.getBlob();
-    const mimeType = blob.getContentType() || 'image/png';
-    const dataUrl = `data:${mimeType};base64,${Utilities.base64Encode(blob.getBytes())}`;
-    imageDataCache[fileId] = dataUrl;
-    return dataUrl;
-  } catch (e) {
-    imageDataCache[fileId] = '';
-    return '';
-  }
+  return `https://drive.google.com/thumbnail?id=${fileId}&sz=w640`;
 }
