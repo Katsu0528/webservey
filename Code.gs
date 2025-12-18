@@ -3,13 +3,13 @@
  *
  * - スプレッドシートの各カテゴリーシートから商品情報を取得
  * - ドライブフォルダから自販機メーカー画像を取得
- * - 回答を Responses シートへ保存（メールアドレスはバックエンドで取得）
+ * - 回答を「回答」シートへ保存（メールアドレスはバックエンドで取得）
  */
 
 const SPREADSHEET_ID = '1xkg8vNscpcWTA6GA0VPxGTJCAH6LyvsYhq7VhOlDcXg';
 const PRODUCT_FOLDER_ID = '18fA4HRavIBTM2aPL-OqVaWhjRRgBhlKg';
 const VENDOR_FOLDER_ID = '1AJd4BTFTVrLNep44PDz1AuwSF_5TFxdx';
-const RESPONSE_SHEET_NAME = 'Responses';
+const RESPONSE_SHEET_NAME = '回答';
 
 const makerFolderCache = {};
 const makerImageCache = {};
