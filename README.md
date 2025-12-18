@@ -18,8 +18,8 @@
 2. `Code.gs` 冒頭の定数を環境に合わせて設定します。
    ```js
    const SPREADSHEET_ID = '1xkg8vNscpcWTA6GA0VPxGTJCAH6LyvsYhq7VhOlDcXg';
-   const PRODUCT_FOLDER_ID = '1asC-Vcodq52wxph2tZk6y0IpMC-QkZcC';
-   const VENDOR_FOLDER_ID = '1nuVlneWO0PbmOapb_dTYoMNIWQFP45Gg';
+   const PRODUCT_FOLDER_ID = '18fA4HRavIBTM2aPL-OqVaWhjRRgBhlKg';
+   const VENDOR_FOLDER_ID = '1AJd4BTFTVrLNep44PDz1AuwSF_5TFxdx';
    ```
 3. 必要に応じて `Responses` シートが自動作成されるため、回答保存用のシートを事前に用意する必要はありません。
 4. 「デプロイ」>「新しいデプロイ」でウェブアプリとして公開します。  

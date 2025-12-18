@@ -7,8 +7,8 @@
  */
 
 const SPREADSHEET_ID = '1xkg8vNscpcWTA6GA0VPxGTJCAH6LyvsYhq7VhOlDcXg';
-const PRODUCT_FOLDER_ID = '1asC-Vcodq52wxph2tZk6y0IpMC-QkZcC';
-const VENDOR_FOLDER_ID = '1nuVlneWO0PbmOapb_dTYoMNIWQFP45Gg';
+const PRODUCT_FOLDER_ID = '18fA4HRavIBTM2aPL-OqVaWhjRRgBhlKg';
+const VENDOR_FOLDER_ID = '1AJd4BTFTVrLNep44PDz1AuwSF_5TFxdx';
 const RESPONSE_SHEET_NAME = 'Responses';
 
 const makerFolderCache = {};
