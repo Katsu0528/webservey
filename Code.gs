@@ -94,7 +94,9 @@ function readCategorySheet(ss, sheetName) {
   if (!sheet) return [];
 
   const rows = sheet.getDataRange().getValues();
-  return rows
+  const dataRows = rows.length && isHeaderRow(rows[0]) ? rows.slice(1) : rows;
+
+  return dataRows
     .map((row) => {
       const product = row[0] ? String(row[0]).trim() : '';
       if (!product) return null;
@@ -107,6 +109,14 @@ function readCategorySheet(ss, sheetName) {
       };
     })
     .filter(Boolean);
+}
+
+function isHeaderRow(row) {
+  const first = String(row[0] || '').trim();
+  const second = String(row[1] || '').trim();
+  const third = String(row[2] || '').trim();
+  const headerWords = ['商品名', 'メーカー', 'メーカー名', '価格'];
+  return headerWords.some((word) => first === word || second === word || third === word);
 }
 
 function getVendorImages() {
