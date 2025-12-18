@@ -69,26 +69,33 @@ function appendResponseRow(ss, email, rankedProducts, freeText) {
     sheet.appendRow([
       'タイムスタンプ',
       'メールアドレス',
-      '1位（カテゴリ/メーカー/商品名/価格）',
-      '2位（カテゴリ/メーカー/商品名/価格）',
-      '3位（カテゴリ/メーカー/商品名/価格）',
+      '1位カテゴリ',
+      '1位メーカー',
+      '1位商品名',
+      '1位価格',
+      '2位カテゴリ',
+      '2位メーカー',
+      '2位商品名',
+      '2位価格',
+      '3位カテゴリ',
+      '3位メーカー',
+      '3位商品名',
+      '3位価格',
       '自由記入',
     ]);
   }
 
-  const formatProduct = (product) => {
-    if (!product) return '';
-    const maker = product.maker ? `${product.maker}/` : '';
-    const price = product.price ? ` ${product.price}` : '';
-    return `${product.category || ''}: ${maker}${product.product || ''}${price}`.trim();
+  const buildProductCells = (product) => {
+    if (!product) return ['', '', '', ''];
+    return [product.category || '', product.maker || '', product.product || '', product.price || ''];
   };
 
   sheet.appendRow([
     new Date(),
     email,
-    formatProduct(rankedProducts[0]),
-    formatProduct(rankedProducts[1]),
-    formatProduct(rankedProducts[2]),
+    ...buildProductCells(rankedProducts[0]),
+    ...buildProductCells(rankedProducts[1]),
+    ...buildProductCells(rankedProducts[2]),
     freeText || '',
   ]);
 }
@@ -122,6 +129,58 @@ function appendAggregateRows(ss, email, rankedProducts, freeText) {
       idx === 0 ? freeText || '' : '',
     ]);
   });
+
+  refreshPointSummary(sheet);
+}
+
+function refreshPointSummary(sheet) {
+  const DATA_COLUMNS = 9;
+  const SUMMARY_START_COL = 11; // Column K
+  const SUMMARY_TITLE_CELL = sheet.getRange(1, SUMMARY_START_COL);
+  const SUMMARY_START_ROW = 2;
+  const headers = ['カテゴリ', 'メーカー', '商品名', '価格', '合計Pt', '票数'];
+
+  SUMMARY_TITLE_CELL.setValue('ポイント集計');
+
+  const lastRow = sheet.getLastRow();
+  const dataRowCount = Math.max(lastRow - 1, 0);
+  if (dataRowCount === 0) {
+    sheet.getRange(SUMMARY_START_ROW, SUMMARY_START_COL, sheet.getMaxRows() - SUMMARY_START_ROW + 1, headers.length).clearContent();
+    return;
+  }
+
+  const data = sheet.getRange(2, 1, dataRowCount, DATA_COLUMNS).getValues();
+  const summaryMap = {};
+
+  data.forEach((row) => {
+    const timestamp = row[0];
+    if (!timestamp) return;
+    const points = Number(row[3]) || 0;
+    const category = row[4] || '';
+    const maker = row[5] || '';
+    const product = row[6] || '';
+    const price = row[7] || '';
+    const key = [category, maker, product, price].join('||');
+
+    if (!summaryMap[key]) {
+      summaryMap[key] = { category, maker, product, price, points: 0, count: 0 };
+    }
+
+    summaryMap[key].points += points;
+    summaryMap[key].count += 1;
+  });
+
+  const summaryRows = Object.values(summaryMap).sort((a, b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    if (a.category !== b.category) return String(a.category).localeCompare(String(b.category), 'ja');
+    if (a.maker !== b.maker) return String(a.maker).localeCompare(String(b.maker), 'ja');
+    return String(a.product).localeCompare(String(b.product), 'ja');
+  });
+
+  const output = [headers, ...summaryRows.map((item) => [item.category, item.maker, item.product, item.price, item.points, item.count])];
+  const clearHeight = Math.max(sheet.getLastRow(), SUMMARY_START_ROW + output.length) - SUMMARY_START_ROW + 1;
+  sheet.getRange(SUMMARY_START_ROW, SUMMARY_START_COL, clearHeight, headers.length).clearContent();
+  sheet.getRange(SUMMARY_START_ROW, SUMMARY_START_COL, output.length, headers.length).setValues(output);
 }
 
 function buildSheetDataMap(ss) {
