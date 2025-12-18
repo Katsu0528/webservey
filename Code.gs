@@ -107,32 +107,13 @@ function buildCategoryItems(sheetName, folderName, sheetData) {
 
   const folder = getCategoryFolder(folderName);
   if (folder) {
-    const iterator = folder.getFiles();
-    while (iterator.hasNext()) {
-      const file = iterator.next();
-      const mime = file.getMimeType() || '';
-      if (!mime.startsWith('image/')) continue;
-      const displayName = stripExtension(file.getName());
-      const key = normalizeProductKey(displayName);
-      if (!key) continue;
-
-      const row = data[key];
-      matchedKeys.add(key);
-
-      items.push({
-        product: (row && row.product) || displayName,
-        maker: (row && row.maker) || '',
-        price: (row && row.price) || '',
-        imageUrl: buildDriveImageUrl(file.getId()) || buildDriveViewUrl(file.getId()),
-        category: sheetName,
-      });
-    }
+    collectCategoryFolderItems(folder, sheetName, data, matchedKeys, items);
   }
 
   Object.keys(data).forEach((key) => {
     if (matchedKeys.has(key)) return;
     const row = data[key];
-    const imageUrl = normalizeImageUrl(row.imageUrl) || getProductImageUrlFromDrive(row.maker, row.product);
+    const imageUrl = normalizeImageUrl(row.imageUrl) || getProductImageUrlFromDrive(row.maker, row.product, sheetName);
     items.push({
       product: row.product,
       maker: row.maker,
@@ -143,6 +124,36 @@ function buildCategoryItems(sheetName, folderName, sheetData) {
   });
 
   return items;
+}
+
+function collectCategoryFolderItems(folder, sheetName, sheetData, matchedKeys, items, makerName) {
+  const fileIterator = folder.getFiles();
+  while (fileIterator.hasNext()) {
+    const file = fileIterator.next();
+    const mime = file.getMimeType() || '';
+    if (!mime.startsWith('image/')) continue;
+    const displayName = stripExtension(file.getName());
+    const key = normalizeProductKey(displayName);
+    if (!key || matchedKeys.has(key)) continue;
+
+    const row = sheetData[key];
+    matchedKeys.add(key);
+
+    items.push({
+      product: (row && row.product) || displayName,
+      maker: (row && row.maker) || makerName || '',
+      price: (row && row.price) || '',
+      imageUrl: buildDriveImageUrl(file.getId()) || buildDriveViewUrl(file.getId()),
+      category: sheetName,
+    });
+  }
+
+  const folderIterator = folder.getFolders();
+  while (folderIterator.hasNext()) {
+    const child = folderIterator.next();
+    const childMakerName = child.getName() || makerName;
+    collectCategoryFolderItems(child, sheetName, sheetData, matchedKeys, items, childMakerName);
+  }
 }
 
 function buildSheetDataMap(ss) {
@@ -217,7 +228,7 @@ function getVendorImages() {
   }
 }
 
-function getProductImageUrlFromDrive(rawMaker, product) {
+function getProductImageUrlFromDrive(rawMaker, product, categoryName) {
   if (!PRODUCT_FOLDER_ID || !product) return '';
   const normalizedProduct = normalizeProductKey(product);
 
@@ -228,14 +239,15 @@ function getProductImageUrlFromDrive(rawMaker, product) {
   const maker = normalizeMakerKey(rawMaker);
   if (!maker) return '';
 
-  const folder = getMakerFolder(maker);
+  const cacheKey = buildMakerCacheKey(maker, categoryName);
+  const folder = getMakerFolder(maker, categoryName);
   if (!folder) return '';
 
-  if (!makerImageCache[maker]) {
-    makerImageCache[maker] = buildMakerImageMap(folder);
+  if (!makerImageCache[cacheKey]) {
+    makerImageCache[cacheKey] = buildMakerImageMap(folder);
   }
 
-  const imageMap = makerImageCache[maker];
+  const imageMap = makerImageCache[cacheKey];
   const fileId = findMatchingImageId(imageMap, normalizedProduct);
   return fileId ? buildDriveImageUrl(fileId) || buildDriveViewUrl(fileId) : '';
 }
@@ -297,14 +309,50 @@ function findMatchingImageId(imageMap, normalizedProduct) {
   return '';
 }
 
-function getMakerFolder(maker) {
-  if (makerFolderCache[maker]) return makerFolderCache[maker];
-  const root = getProductRootFolder();
-  if (!root) return null;
+function getMakerFolder(maker, categoryName) {
+  if (!maker) return null;
+  const cacheKey = buildMakerCacheKey(maker, categoryName);
+  if (makerFolderCache.hasOwnProperty(cacheKey)) return makerFolderCache[cacheKey];
 
-  const iterator = root.getFoldersByName(maker);
-  makerFolderCache[maker] = iterator.hasNext() ? iterator.next() : null;
-  return makerFolderCache[maker];
+  const root = getProductRootFolder();
+  if (!root) {
+    makerFolderCache[cacheKey] = null;
+    return null;
+  }
+
+  const rootIterator = root.getFoldersByName(maker);
+  if (rootIterator.hasNext()) {
+    makerFolderCache[cacheKey] = rootIterator.next();
+    return makerFolderCache[cacheKey];
+  }
+
+  const candidates = [];
+  if (categoryName) {
+    const directMatch = getCategoryFolder(categoryName);
+    if (directMatch) candidates.push(directMatch);
+  }
+  CATEGORY_SHEETS.forEach((cat) => {
+    if (categoryName && cat.key === categoryName) return;
+    const folder = getCategoryFolder(cat.key);
+    if (folder) candidates.push(folder);
+  });
+
+  for (let i = 0; i < candidates.length; i++) {
+    const categoryFolder = candidates[i];
+    if (!categoryFolder) continue;
+    const nestedIterator = categoryFolder.getFoldersByName(maker);
+    if (nestedIterator.hasNext()) {
+      makerFolderCache[cacheKey] = nestedIterator.next();
+      return makerFolderCache[cacheKey];
+    }
+  }
+
+  makerFolderCache[cacheKey] = null;
+  return makerFolderCache[cacheKey];
+}
+
+function buildMakerCacheKey(maker, categoryName) {
+  return `${categoryName || 'root'}::${maker || ''}`;
 }
 
 function getCategoryFolder(categoryName) {

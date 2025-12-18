@@ -446,36 +446,40 @@
         iframe.title = alt || 'image preview';
         iframe.loading = 'lazy';
         iframe.referrerPolicy = 'no-referrer';
+        iframe.sandbox = 'allow-same-origin';
+
+        const escapeAttr = (value) =>
+          String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/'/g, '&#39;');
+
+        const buildSrcDoc = (imageSrc, altText) => `
+          <!doctype html>
+          <html>
+            <head>
+              <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                html, body { width: 100%; height: 100%; background: linear-gradient(145deg, #fdf3ff, #f0f5ff); }
+                body { display: flex; align-items: center; justify-content: center; }
+                img { width: 100%; height: 100%; object-fit: contain; display: block; }
+              </style>
+            </head>
+            <body style="margin:0;padding:0;">
+              <img src="${imageSrc}" alt="${altText}" onerror="this.onerror=null; this.src='${escapeAttr(FALLBACK_IMAGE)}';" />
+            </body>
+          </html>
+        `;
 
         const applyFallback = () => {
           if (iframe.dataset.fallbackApplied) return;
           iframe.dataset.fallbackApplied = 'true';
-          iframe.srcdoc = `
-            <style>
-              html,body {
-                margin: 0;
-                padding: 0;
-                width: 100%;
-                height: 100%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: linear-gradient(145deg, #fdf3ff, #f0f5ff);
-                font-family: 'Noto Sans JP', system-ui, sans-serif;
-                color: #6b7280;
-              }
-              img {
-                max-width: 90%;
-                max-height: 90%;
-                object-fit: contain;
-              }
-            </style>
-            <img src="${FALLBACK_IMAGE}" alt="画像を読み込めませんでした" />
-          `;
+          iframe.srcdoc = buildSrcDoc(escapeAttr(FALLBACK_IMAGE), '画像を読み込めませんでした');
         };
 
         if (src) {
-          iframe.src = src;
+          iframe.srcdoc = buildSrcDoc(escapeAttr(src), escapeAttr(alt || 'image preview'));
         } else {
           applyFallback();
         }
