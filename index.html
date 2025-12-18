@@ -274,6 +274,8 @@
         vendorImages: [],
         selectedVendor: null,
       };
+      const FALLBACK_IMAGE =
+        'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="360" height="240" viewBox="0 0 360 240"><rect width="360" height="240" fill="%23f2f4f7"/><rect x="30" y="30" width="300" height="180" rx="12" fill="none" stroke="%23c3cad4" stroke-width="8"/><path d="M96 166l48-58 48 58 48-72 24 32" fill="none" stroke="%23c3cad4" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><circle cx="138" cy="90" r="22" fill="%23d8dde5"/></svg>';
 
       const els = {
         tabs: document.getElementById('category-tabs'),
@@ -288,6 +290,19 @@
       function setStatus(message, isError = false) {
         els.status.textContent = message || '';
         els.status.style.color = isError ? '#d93025' : '#444';
+      }
+
+      function createImageElement(src, alt) {
+        const img = document.createElement('img');
+        img.src = src || FALLBACK_IMAGE;
+        img.alt = alt || '';
+        img.loading = 'lazy';
+        img.addEventListener('error', () => {
+          if (img.dataset.fallbackApplied) return;
+          img.dataset.fallbackApplied = 'true';
+          img.src = FALLBACK_IMAGE;
+        });
+        return img;
       }
 
       function updateCount() {
@@ -340,15 +355,28 @@
             card.classList.add('selected');
           }
 
-          card.innerHTML = `
-            <img src="${item.imageUrl || ''}" alt="${item.product}" loading="lazy" />
-            <span class="badge">${item.category}</span>
-            <div class="meta">
-              <span class="maker">${item.maker || 'メーカー不明'}</span>
-              <span>${item.price || ''}</span>
-            </div>
-            <h4>${item.product}</h4>
-          `;
+          const img = createImageElement(item.imageUrl, item.product);
+          const badge = document.createElement('span');
+          badge.className = 'badge';
+          badge.textContent = item.category;
+
+          const meta = document.createElement('div');
+          meta.className = 'meta';
+          const maker = document.createElement('span');
+          maker.className = 'maker';
+          maker.textContent = item.maker || 'メーカー不明';
+          const price = document.createElement('span');
+          price.textContent = item.price || '';
+          meta.appendChild(maker);
+          meta.appendChild(price);
+
+          const title = document.createElement('h4');
+          title.textContent = item.product;
+
+          card.appendChild(img);
+          card.appendChild(badge);
+          card.appendChild(meta);
+          card.appendChild(title);
 
           card.addEventListener('click', () => toggleProduct(item, card));
           els.productGrid.appendChild(card);
@@ -391,10 +419,12 @@
             card.classList.add('dimmed');
           }
 
-          card.innerHTML = `
-            <img src="${vendor.url}" alt="${vendor.name}" loading="lazy" />
-            <h4>${vendor.name}</h4>
-          `;
+          const img = createImageElement(vendor.url, vendor.name);
+          const title = document.createElement('h4');
+          title.textContent = vendor.name;
+
+          card.appendChild(img);
+          card.appendChild(title);
 
           card.addEventListener('click', () => {
             if (state.selectedVendor && state.selectedVendor.id === vendor.id) {
