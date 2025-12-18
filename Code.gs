@@ -7,6 +7,7 @@
 
 const SPREADSHEET_ID = '1xkg8vNscpcWTA6GA0VPxGTJCAH6LyvsYhq7VhOlDcXg';
 const PRODUCT_FOLDER_ID = '18fA4HRavIBTM2aPL-OqVaWhjRRgBhlKg';
+const MAKER_BADGE_FOLDER_ID = '1AJd4BTFTVrLNep44PDz1AuwSF_5TFxdx';
 const RESPONSE_SHEET_NAME = '回答';
 const AGGREGATE_SHEET_NAME = '集計';
 const RANK_POINTS = [3, 2, 1];
@@ -16,6 +17,8 @@ const makerFolderCache = {};
 const makerImageCache = {};
 let productRootFolder;
 let productImageMap;
+let makerBadgeFolder;
+let makerBadgeImageMap;
 
 const CATEGORY_SHEETS = [
   { key: 'コーヒー', sheetName: 'コーヒー' },
@@ -186,14 +189,23 @@ function refreshPointSummary(sheet) {
 function getRankingSummary() {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const sheet = ss.getSheetByName(AGGREGATE_SHEET_NAME);
-  if (!sheet) return [];
+  if (!sheet) return { products: [], makerLeader: null };
 
   const lastRow = sheet.getLastRow();
   const DATA_COLUMNS = 9;
-  if (lastRow <= 1) return [];
+  if (lastRow <= 1) return { products: [], makerLeader: null };
 
   const rows = sheet.getRange(2, 1, lastRow - 1, DATA_COLUMNS).getValues();
-  const summaryMap = {};
+  const { productMap, makerMap } = buildRankingMaps(rows);
+  const products = buildProductRanking(productMap).slice(0, 5);
+  const makerLeader = buildMakerLeader(makerMap);
+
+  return { products, makerLeader };
+}
+
+function buildRankingMaps(rows) {
+  const productMap = {};
+  const makerMap = {};
 
   rows.forEach((row) => {
     const timestamp = row[0];
@@ -203,17 +215,27 @@ function getRankingSummary() {
     const maker = row[5] || '';
     const product = row[6] || '';
     const price = row[7] || '';
-    const key = [category, maker, product, price].join('||');
+    const productKey = [category, maker, product, price].join('||');
+    const makerKey = normalizeProductKey(maker) || 'メーカー不明';
 
-    if (!summaryMap[key]) {
-      summaryMap[key] = { category, maker, product, price, points: 0, count: 0 };
+    if (!productMap[productKey]) {
+      productMap[productKey] = { category, maker, product, price, points: 0, count: 0 };
     }
+    productMap[productKey].points += points;
+    productMap[productKey].count += 1;
 
-    summaryMap[key].points += points;
-    summaryMap[key].count += 1;
+    if (!makerMap[makerKey]) {
+      makerMap[makerKey] = { maker: maker || 'メーカー不明', points: 0, count: 0 };
+    }
+    makerMap[makerKey].points += points;
+    makerMap[makerKey].count += 1;
   });
 
-  return Object.values(summaryMap)
+  return { productMap, makerMap };
+}
+
+function buildProductRanking(productMap) {
+  return Object.values(productMap)
     .sort((a, b) => {
       if (b.points !== a.points) return b.points - a.points;
       if (a.category !== b.category) return String(a.category).localeCompare(String(b.category), 'ja');
@@ -224,6 +246,20 @@ function getRankingSummary() {
       ...item,
       imageUrl: getProductImageUrlFromDrive(item.maker, item.product, item.category) || '',
     }));
+}
+
+function buildMakerLeader(makerMap) {
+  const makers = Object.values(makerMap || {});
+  if (!makers.length) return null;
+
+  makers.sort((a, b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    return String(a.maker).localeCompare(String(b.maker), 'ja');
+  });
+
+  const leader = makers[0];
+  const imageUrl = getMakerBadgeImageUrl(leader.maker);
+  return { ...leader, imageUrl };
 }
 
 function buildSheetDataMap(ss) {
@@ -341,6 +377,51 @@ function findMatchingImageId(imageMap, normalizedProduct) {
   if (reverseMatch.length) return imageMap[reverseMatch[0]];
 
   return '';
+}
+
+function getMakerBadgeFolder() {
+  if (makerBadgeFolder !== undefined) return makerBadgeFolder;
+  if (!MAKER_BADGE_FOLDER_ID) {
+    makerBadgeFolder = null;
+    return null;
+  }
+  try {
+    makerBadgeFolder = DriveApp.getFolderById(MAKER_BADGE_FOLDER_ID);
+    return makerBadgeFolder;
+  } catch (e) {
+    makerBadgeFolder = null;
+    return null;
+  }
+}
+
+function getMakerBadgeImageMap() {
+  if (makerBadgeImageMap !== undefined) return makerBadgeImageMap;
+  const folder = getMakerBadgeFolder();
+  if (!folder) {
+    makerBadgeImageMap = null;
+    return null;
+  }
+
+  const map = {};
+  const iterator = folder.getFiles();
+  while (iterator.hasNext()) {
+    const file = iterator.next();
+    const mime = file.getMimeType() || '';
+    if (!mime.startsWith('image/')) continue;
+    const nameKey = normalizeProductKey(file.getName());
+    if (!nameKey) continue;
+    map[nameKey] = file.getId();
+  }
+
+  makerBadgeImageMap = map;
+  return makerBadgeImageMap;
+}
+
+function getMakerBadgeImageUrl(makerName) {
+  const imageMap = getMakerBadgeImageMap();
+  const normalizedMaker = normalizeProductKey(makerName);
+  const fileId = findMatchingImageId(imageMap, normalizedMaker);
+  return fileId ? buildDriveImageUrl(fileId) || buildDriveViewUrl(fileId) : '';
 }
 
 function getMakerFolder(maker, categoryName) {
@@ -470,9 +551,8 @@ function buildDriveViewUrl(fileId) {
 
 function buildDriveImageUrl(fileId) {
   if (!fileId) return '';
-  // `thumbnail` エンドポイントは閲覧権限が無いと 403 になるケースが増えたため、
-  // 公開設定が有効なファイルならブラウザから直接参照できる preview リンクを優先する。
-  return buildDrivePreviewUrl(fileId) || buildDriveViewUrl(fileId);
+  // 画像タグで直接表示できる view リンクを優先し、フォールバックとして preview を返す。
+  return buildDriveViewUrl(fileId) || buildDrivePreviewUrl(fileId);
 }
 
 function buildCategoriesFromDrive() {
