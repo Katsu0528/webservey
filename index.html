@@ -304,6 +304,14 @@
         pointer-events: none;
       }
 
+      .media-frame img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+        background: transparent;
+      }
+
       .card h4 {
         margin: 0;
         font-size: 15px;
@@ -535,6 +543,53 @@
         box-shadow: 0 12px 22px rgba(0, 0, 0, 0.18);
       }
 
+      .maker-highlight {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 14px;
+        background: linear-gradient(120deg, rgba(255, 126, 182, 0.06), rgba(108, 140, 255, 0.08));
+        box-shadow: var(--shadow);
+        margin-top: 12px;
+        display: none;
+      }
+
+      .maker-highlight.visible {
+        display: block;
+      }
+
+      .maker-highlight-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .maker-highlight-body {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 12px;
+        align-items: center;
+        margin-top: 10px;
+      }
+
+      .maker-highlight .media-frame {
+        aspect-ratio: 4 / 3;
+        min-height: 160px;
+      }
+
+      .maker-highlight-title {
+        margin: 2px 0 4px;
+        font-size: 18px;
+        letter-spacing: 0.02em;
+      }
+
+      .maker-highlight-meta {
+        margin: 0;
+        color: #4a5066;
+        font-weight: 600;
+      }
+
       @media (max-width: 600px) {
         .selection-layout {
           grid-template-columns: 1fr;
@@ -544,6 +599,9 @@
         }
         .media-frame {
           min-height: 180px;
+        }
+        .maker-highlight-body {
+          grid-template-columns: 1fr;
         }
       }
     </style>
@@ -616,9 +674,22 @@
           <div>
             <p class="eyebrow">結果ページ</p>
             <h2>🏆 みんなの現在の順位</h2>
-            <p class="section-lead">最新のPt順で、商品名とメーカーを画像付きで表示します。</p>
+            <p class="section-lead">最新のPt順で、上位5つの商品名とメーカーを画像付きで表示します。</p>
           </div>
           <button class="close-tab-btn" id="close-tab-btn">この画面を閉じる</button>
+        </div>
+        <div class="maker-highlight" id="maker-highlight">
+          <div class="maker-highlight-header">
+            <span class="pill accent">このままいくと…</span>
+            <div>
+              <p class="maker-highlight-meta" id="maker-highlight-meta"></p>
+              <h3 class="maker-highlight-title" id="maker-highlight-title"></h3>
+            </div>
+          </div>
+          <div class="maker-highlight-body">
+            <div id="maker-highlight-image"></div>
+            <p class="section-lead" id="maker-highlight-description"></p>
+          </div>
         </div>
         <div class="status" id="ranking-status">最新の順位を読み込んでいます...</div>
         <div id="ranking-list" class="ranking-grid"></div>
@@ -649,6 +720,11 @@
         rankingStatus: document.getElementById('ranking-status'),
         rankingList: document.getElementById('ranking-list'),
         closeTabBtn: document.getElementById('close-tab-btn'),
+        makerHighlight: document.getElementById('maker-highlight'),
+        makerHighlightMeta: document.getElementById('maker-highlight-meta'),
+        makerHighlightTitle: document.getElementById('maker-highlight-title'),
+        makerHighlightImage: document.getElementById('maker-highlight-image'),
+        makerHighlightDescription: document.getElementById('maker-highlight-description'),
       };
 
       const viewState = { current: 'form' };
@@ -675,65 +751,20 @@
         const wrapper = document.createElement('div');
         wrapper.className = 'media-frame';
 
-        const iframe = document.createElement('iframe');
-        iframe.title = alt || 'image preview';
-        iframe.loading = 'lazy';
-        iframe.style.display = 'block';
-
-        const escapeAttr = (value) =>
-          String(value || '')
-            .replace(/&/g, '&amp;')
-            .replace(/"/g, '&quot;')
-            .replace(/</g, '&lt;')
-            .replace(/'/g, '&#39;');
-
-        const buildSrcDoc = (imageSrc, altText) => `
-          <!doctype html>
-          <html>
-            <head>
-              <style>
-                * { margin: 0; padding: 0; box-sizing: border-box; }
-                html, body { width: 100%; height: 100%; background: transparent; }
-                body { display: flex; align-items: center; justify-content: center; }
-                img { width: 100%; height: 100%; object-fit: contain; display: block; background: transparent; }
-              </style>
-            </head>
-            <body style="margin:0;padding:0;">
-              <img src="${imageSrc}" alt="${altText}" onerror="this.onerror=null; this.src='${escapeAttr(FALLBACK_IMAGE)}';" />
-            </body>
-          </html>
-        `;
+        const img = document.createElement('img');
+        img.loading = 'lazy';
+        img.alt = alt || 'image preview';
+        img.referrerPolicy = 'no-referrer';
 
         const applyFallback = () => {
-          if (iframe.dataset.fallbackApplied) return;
-          iframe.dataset.fallbackApplied = 'true';
-          iframe.sandbox = 'allow-same-origin';
-          iframe.referrerPolicy = 'no-referrer';
-          iframe.srcdoc = buildSrcDoc(escapeAttr(FALLBACK_IMAGE), '画像を読み込めませんでした');
+          img.onerror = null;
+          img.src = FALLBACK_IMAGE;
         };
 
-        const isDrivePreview = typeof src === 'string' && /drive\.google\.com\/file\/.+\/preview/.test(src);
+        img.onerror = applyFallback;
+        img.src = src || FALLBACK_IMAGE;
 
-        if (isDrivePreview) {
-          iframe.src = src;
-          iframe.allow = 'autoplay';
-          iframe.sandbox = 'allow-same-origin allow-scripts allow-popups allow-forms';
-          iframe.referrerPolicy = 'no-referrer';
-          iframe.addEventListener('error', applyFallback);
-        } else {
-          iframe.referrerPolicy = 'no-referrer';
-          iframe.sandbox = 'allow-same-origin';
-
-          if (src) {
-            iframe.srcdoc = buildSrcDoc(escapeAttr(src), escapeAttr(alt || 'image preview'));
-          } else {
-            applyFallback();
-          }
-
-          iframe.addEventListener('error', applyFallback);
-        }
-
-        wrapper.appendChild(iframe);
+        wrapper.appendChild(img);
         return wrapper;
       }
 
@@ -940,8 +971,11 @@
 
         google.script.run
           .withSuccessHandler((data) => {
-            renderRankingList(data || []);
-            setRankingStatus(data?.length ? '' : 'まだ集計データがありません。最初の投票をお待ちしています。');
+            const products = Array.isArray(data?.products) ? data.products : Array.isArray(data) ? data : [];
+            const makerLeader = !Array.isArray(data) ? data?.makerLeader : null;
+            renderMakerHighlight(makerLeader);
+            renderRankingList(products);
+            setRankingStatus(products.length ? '' : 'まだ集計データがありません。最初の投票をお待ちしています。');
           })
           .withFailureHandler((err) => {
             setRankingStatus(err?.message || '順位の取得に失敗しました。少し時間をおいて再度お試しください。', true);
@@ -951,9 +985,10 @@
 
       function renderRankingList(items) {
         els.rankingList.innerHTML = '';
-        if (!items || !items.length) return;
+        const topItems = Array.isArray(items) ? items.slice(0, 5) : [];
+        if (!topItems.length) return;
 
-        items.forEach((item, idx) => {
+        topItems.forEach((item, idx) => {
           const card = document.createElement('div');
           card.className = 'ranking-card';
 
@@ -988,6 +1023,36 @@
 
           els.rankingList.appendChild(card);
         });
+      }
+
+      function renderMakerHighlight(maker) {
+        if (!els.makerHighlight || !els.makerHighlightImage || !els.makerHighlightMeta || !els.makerHighlightTitle || !els.makerHighlightDescription) {
+          return;
+        }
+        els.makerHighlight.classList.remove('visible');
+        els.makerHighlightImage.innerHTML = '';
+        els.makerHighlightMeta.textContent = '';
+        els.makerHighlightTitle.textContent = '';
+        els.makerHighlightDescription.textContent = '';
+
+        if (!maker || (!maker.maker && !maker.imageUrl)) return;
+
+        const name = maker.maker || 'メーカー不明';
+        const points = Number(maker.points || 0);
+        const votes = Number(maker.count || 0);
+        const imageUrl = maker.imageUrl || '';
+
+        const metaParts = [];
+        if (points) metaParts.push(`合計 ${points} Pt`);
+        if (votes) metaParts.push(`${votes} 票`);
+
+        els.makerHighlightMeta.textContent = metaParts.join(' / ') || '集計中...';
+        els.makerHighlightTitle.textContent = `${name} がメーカーPt 1位！`;
+        els.makerHighlightDescription.textContent = `このままいくと… ${name} の自販機が選ばれそうです。`;
+
+        const image = createImageElement(imageUrl || FALLBACK_IMAGE, name);
+        els.makerHighlightImage.appendChild(image);
+        els.makerHighlight.classList.add('visible');
       }
 
       function closeTab() {
