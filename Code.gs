@@ -9,7 +9,7 @@ const SPREADSHEET_ID = '1xkg8vNscpcWTA6GA0VPxGTJCAH6LyvsYhq7VhOlDcXg';
 const PRODUCT_FOLDER_ID = '18fA4HRavIBTM2aPL-OqVaWhjRRgBhlKg';
 const RESPONSE_SHEET_NAME = '回答';
 const AGGREGATE_SHEET_NAME = '集計';
-const RANK_POINTS = [3, 2, 3];
+const RANK_POINTS = [3, 2, 1];
 
 const categoryFolderCache = {};
 const makerFolderCache = {};
@@ -55,7 +55,9 @@ function getInitialData() {
 
 function submitResponse(payload) {
   if (!payload) throw new Error('送信データが見つかりません。');
-  const products = Array.isArray(payload.selectedProducts) ? payload.selectedProducts.slice(0, 3) : [];
+  const products = Array.isArray(payload.selectedProducts)
+    ? payload.selectedProducts.filter((p) => p && p.product).slice(0, 3)
+    : [];
   if (products.length !== 3) throw new Error('推しドリンクのTOP3を1位から3位まで選択してください。');
 
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
