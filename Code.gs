@@ -104,7 +104,7 @@ function readCategorySheet(ss, sheetName) {
         product,
         maker: row[1] ? String(row[1]).trim() : '',
         price: row[2] ? String(row[2]).trim() : '',
-        imageUrl: buildDriveViewUrl(extractDriveId(String(row[3] || ''))) || '',
+        imageUrl: normalizeImageUrl(row[3]),
         category: sheetName,
       };
     })
@@ -143,8 +143,27 @@ function buildDriveViewUrl(fileId) {
   return `https://drive.google.com/uc?export=view&id=${fileId}`;
 }
 
+function normalizeImageUrl(rawValue) {
+  if (!rawValue) return '';
+  const value = String(rawValue).trim();
+
+  // data URL はそのまま返却
+  if (value.startsWith('data:')) return value;
+
+  // 通常の http(s) 画像 URL はそのまま利用
+  if (new RegExp('^https?://', 'i').test(value) && !value.includes('drive.google.com')) {
+    return value;
+  }
+
+  // Drive の共有 URL / ID を正規化
+  const driveId = extractDriveId(value);
+  if (driveId) return buildDriveViewUrl(driveId);
+
+  return '';
+}
+
 function extractDriveId(url) {
   if (!url) return '';
   const idMatch = url.match(/[-\\w]{25,}/);
-  return idMatch ? idMatch[0] : url;
+  return idMatch ? idMatch[0] : '';
 }
