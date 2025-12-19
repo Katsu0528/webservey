@@ -277,6 +277,26 @@
         min-width: 70px;
       }
 
+      .rank-thumb {
+        width: 60px;
+        height: 60px;
+        border-radius: 10px;
+        background: #f8f9ff;
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+
+      .rank-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+      }
+
       .rank-content {
         display: flex;
         flex-direction: column;
@@ -521,6 +541,18 @@
         font-size: 13px;
       }
 
+      .question-block {
+        margin: 12px 0 16px;
+        padding: 12px;
+        border: 1px dashed #ffd7eb;
+        background: linear-gradient(120deg, rgba(255, 126, 182, 0.06), rgba(108, 140, 255, 0.06));
+        border-radius: 14px;
+      }
+
+      .question-block .section-lead {
+        margin-bottom: 10px;
+      }
+
       .ranking-view {
         margin-top: 16px;
       }
@@ -691,6 +723,27 @@
             </div>
             <div class="counter" id="product-count">0/3</div>
           </div>
+          <div class="question-block">
+            <p class="eyebrow">質問1</p>
+            <h3>💬 「今飲みたいもの」と「今日が40度の暑い日」の2つを教えてください</h3>
+            <p class="section-lead">
+              どちらの質問も必須です。タブを切り替えてそれぞれ入力してください。
+            </p>
+            <div class="question-tabs" id="question-tabs">
+              <button class="question-tab active" data-key="now">今飲みたいものは？</button>
+              <button class="question-tab" data-key="hot">今日が40度の暑い日だとして、飲みたいものは？</button>
+            </div>
+            <div class="question-panels" id="question-panels">
+              <div class="question-panel active" data-key="now">
+                <p class="required-hint">*必須</p>
+                <textarea id="answer-now" placeholder="例：冷たいアイスコーヒー、シュワっとした炭酸など"></textarea>
+              </div>
+              <div class="question-panel" data-key="hot">
+                <p class="required-hint">*必須</p>
+                <textarea id="answer-hot" placeholder="例：スポーツドリンク、キンキンに冷えたお茶 など"></textarea>
+              </div>
+            </div>
+          </div>
           <div class="note">
             カテゴリータブを切り替えると、そのカテゴリのドリンクが表示されます。商品画像を順位枠にドラッグして選び、枠内のドラッグで並び替えできます。
             重複を選んだ場合は古いほうの順位が解除されます。
@@ -710,23 +763,10 @@
         </section>
 
         <section id="q2">
-          <p class="eyebrow">STEP 2</p>
-          <h2>💬 2つの質問に答えてください（必須）</h2>
-          <p class="section-lead">タブをクリックしてシームレスに切り替えながら、どちらの質問にも必ず回答してください。</p>
-          <div class="question-tabs" id="question-tabs">
-            <button class="question-tab active" data-key="now">今飲みたいものは？</button>
-            <button class="question-tab" data-key="hot">今日が40度の暑い日だとして、飲みたいものは？</button>
-          </div>
-          <div class="question-panels" id="question-panels">
-            <div class="question-panel active" data-key="now">
-              <p class="required-hint">*必須</p>
-              <textarea id="answer-now" placeholder="例：冷たいアイスコーヒー、シュワっとした炭酸など"></textarea>
-            </div>
-            <div class="question-panel" data-key="hot">
-              <p class="required-hint">*必須</p>
-              <textarea id="answer-hot" placeholder="例：スポーツドリンク、キンキンに冷えたお茶 など"></textarea>
-            </div>
-          </div>
+          <p class="eyebrow">質問2</p>
+          <h2>📝 自由記入で要望をどうぞ</h2>
+          <p class="section-lead">ドリンク以外でも、自販機に置いてほしいものや価格帯など、自由にリクエストしてください。</p>
+          <textarea id="free-text" placeholder="例：小腹を満たせるスナックも入れてほしい、カフェインレスの選択肢を増やしてほしい など"></textarea>
         </section>
 
         <div class="actions">
@@ -772,6 +812,7 @@
           now: '',
           hot: '',
         },
+        freeText: '',
         activeQuestion: 'now',
       };
       const dragState = {
@@ -804,6 +845,7 @@
         questionPanels: document.getElementById('question-panels'),
         answerNow: document.getElementById('answer-now'),
         answerHot: document.getElementById('answer-hot'),
+        freeText: document.getElementById('free-text'),
       };
 
       const viewState = { current: 'form' };
@@ -1077,6 +1119,19 @@
           label.className = 'rank-label';
           label.textContent = labels[idx];
 
+          const thumb = document.createElement('div');
+          thumb.className = 'rank-thumb';
+          const thumbImg = document.createElement('img');
+          thumbImg.loading = 'lazy';
+          thumbImg.alt = item?.product || '選択なし';
+          thumbImg.referrerPolicy = 'no-referrer';
+          thumbImg.src = item?.imageUrl || FALLBACK_IMAGE;
+          thumbImg.onerror = () => {
+            thumbImg.onerror = null;
+            thumbImg.src = FALLBACK_IMAGE;
+          };
+          thumb.appendChild(thumbImg);
+
           const content = document.createElement('div');
           content.className = 'rank-content';
 
@@ -1101,6 +1156,7 @@
           }
 
           row.appendChild(label);
+          row.appendChild(thumb);
           row.appendChild(content);
           els.rankList.appendChild(row);
         });
@@ -1136,6 +1192,7 @@
             now: nowAnswer,
             hotDay: hotAnswer,
           },
+          freeText: (state.freeText || '').trim(),
         };
 
         google.script.run
@@ -1144,10 +1201,12 @@
             state.selectedProducts = [null, null, null];
             state.activeRank = 0;
             state.questionAnswers = { now: '', hot: '' };
+            state.freeText = '';
             state.activeQuestion = 'now';
             setActiveQuestionTab('now');
             if (els.answerNow) els.answerNow.value = '';
             if (els.answerHot) els.answerHot.value = '';
+            if (els.freeText) els.freeText.value = '';
             renderProducts();
             renderRankList();
             els.submit.disabled = false;
@@ -1270,6 +1329,11 @@
         if (els.answerHot) {
           els.answerHot.addEventListener('input', (event) => {
             state.questionAnswers.hot = event.target.value;
+          });
+        }
+        if (els.freeText) {
+          els.freeText.addEventListener('input', (event) => {
+            state.freeText = event.target.value;
           });
         }
       }
