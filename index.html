@@ -731,6 +731,84 @@
         font-weight: 600;
       }
 
+      .post-submit-layout {
+        display: grid;
+        grid-template-columns: 1fr 1.2fr;
+        gap: 16px;
+        align-items: start;
+        margin-top: 12px;
+      }
+
+      .post-submit-left,
+      .post-submit-right {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .vending-preview {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 14px;
+        background: linear-gradient(135deg, rgba(255, 126, 182, 0.08), rgba(108, 140, 255, 0.08));
+        box-shadow: var(--shadow);
+      }
+
+      .vending-preview h3 {
+        margin: 6px 0;
+      }
+
+      .vending-preview .section-lead {
+        margin-top: 0;
+      }
+
+      .vending-preview .vending-window {
+        margin-top: 10px;
+      }
+
+      .vending-shelf {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 10px;
+      }
+
+      .shelf-slot {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.06);
+      }
+
+      .shelf-slot .media-frame {
+        aspect-ratio: 3 / 4;
+        min-height: 140px;
+      }
+
+      .shelf-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .shelf-rank {
+        font-weight: 800;
+        color: var(--accent);
+        font-size: 13px;
+      }
+
+      .shelf-title {
+        font-weight: 700;
+      }
+
+      .shelf-meta {
+        color: #4a5066;
+        font-size: 13px;
+      }
+
       @media (max-width: 600px) {
         .selection-layout {
           grid-template-columns: 1fr;
@@ -746,6 +824,9 @@
           min-height: 180px;
         }
         .maker-highlight-body {
+          grid-template-columns: 1fr;
+        }
+        .post-submit-layout {
           grid-template-columns: 1fr;
         }
       }
@@ -853,21 +934,35 @@
           </div>
           <button class="close-tab-btn" id="close-tab-btn">この画面を閉じる</button>
         </div>
-        <div class="maker-highlight" id="maker-highlight">
-          <div class="maker-highlight-header">
-            <span class="pill accent">このままいくと…</span>
-            <div>
-              <p class="maker-highlight-meta" id="maker-highlight-meta"></p>
-              <h3 class="maker-highlight-title" id="maker-highlight-title"></h3>
+        <div class="post-submit-layout">
+          <div class="post-submit-left">
+            <div class="vending-preview">
+              <p class="eyebrow">送信完了！</p>
+              <h3>あなたの投票でこんな自販機に</h3>
+              <p class="section-lead">今飲みたいものと同じ画像表示方法で、上位の商品を棚に並べました。</p>
+              <div class="vending-window">
+                <div id="vending-shelf" class="vending-shelf"></div>
+              </div>
+            </div>
+            <div class="maker-highlight" id="maker-highlight">
+              <div class="maker-highlight-header">
+                <span class="pill accent">このままいくと…</span>
+                <div>
+                  <p class="maker-highlight-meta" id="maker-highlight-meta"></p>
+                  <h3 class="maker-highlight-title" id="maker-highlight-title"></h3>
+                </div>
+              </div>
+              <div class="maker-highlight-body">
+                <div id="maker-highlight-image"></div>
+                <p class="section-lead" id="maker-highlight-description"></p>
+              </div>
             </div>
           </div>
-          <div class="maker-highlight-body">
-            <div id="maker-highlight-image"></div>
-            <p class="section-lead" id="maker-highlight-description"></p>
+          <div class="post-submit-right">
+            <div class="status" id="ranking-status">最新の順位を読み込んでいます...</div>
+            <div id="ranking-list" class="ranking-grid"></div>
           </div>
         </div>
-        <div class="status" id="ranking-status">最新の順位を読み込んでいます...</div>
-        <div id="ranking-list" class="ranking-grid"></div>
       </section>
     </div>
 
@@ -913,6 +1008,7 @@
         makerHighlightTitle: document.getElementById('maker-highlight-title'),
         makerHighlightImage: document.getElementById('maker-highlight-image'),
         makerHighlightDescription: document.getElementById('maker-highlight-description'),
+        vendingShelf: document.getElementById('vending-shelf'),
         questionTabs: document.getElementById('question-tabs'),
         questionPanels: document.getElementById('question-panels'),
         freeText: document.getElementById('free-text'),
@@ -1308,12 +1404,58 @@
             const makerLeader = !Array.isArray(data) ? data?.makerLeader : null;
             renderMakerHighlight(makerLeader);
             renderRankingList(products);
+            renderVendingShelf(products);
             setRankingStatus(products.length ? '' : 'まだ集計データがありません。最初の投票をお待ちしています。');
           })
           .withFailureHandler((err) => {
             setRankingStatus(err?.message || '順位の取得に失敗しました。少し時間をおいて再度お試しください。', true);
           })
           .getRankingSummary();
+      }
+
+      function renderVendingShelf(items) {
+        if (!els.vendingShelf) return;
+        els.vendingShelf.innerHTML = '';
+        const topItems = Array.isArray(items) ? items.slice(0, 4) : [];
+
+        if (!topItems.length) {
+          const empty = document.createElement('div');
+          empty.className = 'empty';
+          empty.textContent = 'まだ商品が並んでいません。投票するとここに表示されます。';
+          els.vendingShelf.appendChild(empty);
+          return;
+        }
+
+        topItems.forEach((item, idx) => {
+          const slot = document.createElement('div');
+          slot.className = 'shelf-slot';
+
+          const image = createImageElement(item.imageUrl, item.product);
+          slot.appendChild(image);
+
+          const info = document.createElement('div');
+          info.className = 'shelf-info';
+
+          const rank = document.createElement('span');
+          rank.className = 'shelf-rank';
+          rank.textContent = `${idx + 1} 位 / ${item.points || 0} Pt`;
+
+          const title = document.createElement('span');
+          title.className = 'shelf-title';
+          title.textContent = item.product || '商品名不明';
+
+          const meta = document.createElement('span');
+          meta.className = 'shelf-meta';
+          const priceLabel = item.price ? ` / ${item.price}` : '';
+          meta.textContent = `${item.maker || 'メーカー不明'}${priceLabel}`;
+
+          info.appendChild(rank);
+          info.appendChild(title);
+          info.appendChild(meta);
+          slot.appendChild(info);
+
+          els.vendingShelf.appendChild(slot);
+        });
       }
 
       function renderRankingList(items) {
