@@ -334,7 +334,7 @@ function getProductImageUrlFromDrive(rawMaker, product, categoryName) {
 
   const rootImageMap = getProductImageMap();
   const rootFileId = findMatchingImageId(rootImageMap, normalizedProduct);
-  if (rootFileId) return buildDriveImageUrl(rootFileId) || buildDriveViewUrl(rootFileId);
+  if (rootFileId) return buildDriveImageUrl(rootFileId);
 
   const maker = normalizeMakerKey(rawMaker);
   if (!maker) return '';
@@ -349,7 +349,7 @@ function getProductImageUrlFromDrive(rawMaker, product, categoryName) {
 
   const imageMap = makerImageCache[cacheKey];
   const fileId = findMatchingImageId(imageMap, normalizedProduct);
-  return fileId ? buildDriveImageUrl(fileId) || buildDriveViewUrl(fileId) : '';
+  return fileId ? buildDriveImageUrl(fileId) : '';
 }
 
 function buildMakerImageMap(folder) {
@@ -451,7 +451,7 @@ function getMakerBadgeImageUrl(makerName) {
   const imageMap = getMakerBadgeImageMap();
   const normalizedMaker = normalizeProductKey(makerName);
   const fileId = findMatchingImageId(imageMap, normalizedMaker);
-  return fileId ? buildDriveImageUrl(fileId) || buildDriveViewUrl(fileId) : '';
+  return fileId ? buildDriveImageUrl(fileId) : '';
 }
 
 function getMakerFolder(maker, categoryName) {
@@ -551,14 +551,17 @@ function normalizeImageUrl(rawValue) {
   // data URL はそのまま返却
   if (value.startsWith('data:')) return value;
 
-  // 通常の http(s) 画像 URL はそのまま利用
-  if (new RegExp('^https?://', 'i').test(value) && !value.includes('drive.google.com')) {
+  const isHttp = /^https?:\/\//i.test(value);
+  const isDriveHost = /(?:drive\.google\.com|googleusercontent\.com)/i.test(value);
+
+  // Drive 以外の http(s) 画像 URL はそのまま利用
+  if (isHttp && !isDriveHost) {
     return value;
   }
 
   // Drive の共有 URL / ID を正規化
   const driveId = extractDriveId(value);
-  if (driveId) return buildDriveImageUrl(driveId) || buildDriveViewUrl(driveId);
+  if (driveId) return buildDriveImageUrl(driveId);
 
   return '';
 }
@@ -581,8 +584,8 @@ function buildDriveViewUrl(fileId) {
 
 function buildDriveImageUrl(fileId) {
   if (!fileId) return '';
-  // 画像タグで直接表示できる googleusercontent リンクを優先し、フォールバックとして preview を返す。
-  return buildDriveViewUrl(fileId) || buildDrivePreviewUrl(fileId);
+  // Drive 画像は googleusercontent の直接リンク形式に統一する
+  return buildDriveViewUrl(fileId);
 }
 
 function buildCategoriesFromDrive() {
@@ -657,7 +660,7 @@ function collectImageItems(folder, meta) {
       product: productName,
       maker: meta.maker || '',
       price: meta.price || '',
-      imageUrl: buildDriveImageUrl(file.getId()) || buildDriveViewUrl(file.getId()),
+      imageUrl: buildDriveImageUrl(file.getId()),
       category: meta.category || '',
     });
   }
