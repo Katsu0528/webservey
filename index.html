@@ -1069,7 +1069,11 @@
         if (!raw) return '';
         const value = String(raw).trim();
         if (value.startsWith('data:')) return value;
-        if (/^https?:\/\//i.test(value) && !value.includes('drive.google.com')) return value;
+
+        const isHttp = /^https?:\/\//i.test(value);
+        const isDriveHost = /(?:drive\.google\.com|googleusercontent\.com)/i.test(value);
+        if (isHttp && !isDriveHost) return value;
+
         const driveId = extractDriveId(value);
         return driveId ? buildDriveImageUrl(driveId) : '';
       }
