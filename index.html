@@ -473,6 +473,54 @@
         display: block;
       }
 
+      .question-tabs {
+        display: inline-flex;
+        gap: 10px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 4px;
+        background: #f8f9ff;
+        box-shadow: var(--shadow);
+        flex-wrap: wrap;
+      }
+
+      .question-tab {
+        border: none;
+        background: transparent;
+        padding: 10px 14px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 700;
+        color: #3a3f52;
+        transition: 0.15s;
+      }
+
+      .question-tab.active {
+        background: linear-gradient(120deg, var(--accent), var(--accent-2));
+        color: #fff;
+        box-shadow: 0 10px 20px rgba(255, 126, 182, 0.35);
+      }
+
+      .question-panels {
+        margin-top: 12px;
+      }
+
+      .question-panel {
+        display: none;
+        margin-top: 10px;
+      }
+
+      .question-panel.active {
+        display: block;
+      }
+
+      .required-hint {
+        margin: 0 0 6px;
+        color: #c22463;
+        font-weight: 700;
+        font-size: 13px;
+      }
+
       .ranking-view {
         margin-top: 16px;
       }
@@ -663,11 +711,22 @@
 
         <section id="q2">
           <p class="eyebrow">STEP 2</p>
-          <h2>💭 あなたの「こんな自販機だったら最高!」を聞かせて (任意)</h2>
-          <textarea
-            id="free-text"
-            placeholder="「この幻のドリンクを入れてほしい!」「100円台の商品を充実させて!」など、夢や希望、なんでもOK! 自由にご記入ください🎤"
-          ></textarea>
+          <h2>💬 2つの質問に答えてください（必須）</h2>
+          <p class="section-lead">タブをクリックしてシームレスに切り替えながら、どちらの質問にも必ず回答してください。</p>
+          <div class="question-tabs" id="question-tabs">
+            <button class="question-tab active" data-key="now">今飲みたいものは？</button>
+            <button class="question-tab" data-key="hot">今日が40度の暑い日だとして、飲みたいものは？</button>
+          </div>
+          <div class="question-panels" id="question-panels">
+            <div class="question-panel active" data-key="now">
+              <p class="required-hint">*必須</p>
+              <textarea id="answer-now" placeholder="例：冷たいアイスコーヒー、シュワっとした炭酸など"></textarea>
+            </div>
+            <div class="question-panel" data-key="hot">
+              <p class="required-hint">*必須</p>
+              <textarea id="answer-hot" placeholder="例：スポーツドリンク、キンキンに冷えたお茶 など"></textarea>
+            </div>
+          </div>
         </section>
 
         <div class="actions">
@@ -709,6 +768,11 @@
         selectedCategory: null,
         selectedProducts: [null, null, null],
         activeRank: 0,
+        questionAnswers: {
+          now: '',
+          hot: '',
+        },
+        activeQuestion: 'now',
       };
       const dragState = {
         source: null,
@@ -725,7 +789,6 @@
         count: document.getElementById('product-count'),
         status: document.getElementById('status'),
         submit: document.getElementById('submit-btn'),
-        freeText: document.getElementById('free-text'),
         rankList: document.getElementById('rank-list'),
         formView: document.getElementById('form-view'),
         rankingView: document.getElementById('ranking-view'),
@@ -737,6 +800,10 @@
         makerHighlightTitle: document.getElementById('maker-highlight-title'),
         makerHighlightImage: document.getElementById('maker-highlight-image'),
         makerHighlightDescription: document.getElementById('maker-highlight-description'),
+        questionTabs: document.getElementById('question-tabs'),
+        questionPanels: document.getElementById('question-panels'),
+        answerNow: document.getElementById('answer-now'),
+        answerHot: document.getElementById('answer-hot'),
       };
 
       const viewState = { current: 'form' };
@@ -757,6 +824,20 @@
         els.formView.classList.toggle('active', target === 'form');
         els.rankingView.classList.toggle('active', target === 'ranking');
         window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function setActiveQuestionTab(key) {
+        state.activeQuestion = key;
+        if (els.questionTabs) {
+          els.questionTabs.querySelectorAll('.question-tab').forEach((tab) => {
+            tab.classList.toggle('active', tab.dataset.key === key);
+          });
+        }
+        if (els.questionPanels) {
+          els.questionPanels.querySelectorAll('.question-panel').forEach((panel) => {
+            panel.classList.toggle('active', panel.dataset.key === key);
+          });
+        }
       }
 
       function createImageElement(src, alt) {
@@ -1037,13 +1118,24 @@
           return;
         }
 
+        const nowAnswer = (state.questionAnswers.now || '').trim();
+        const hotAnswer = (state.questionAnswers.hot || '').trim();
+        if (!nowAnswer || !hotAnswer) {
+          setStatus('「今飲みたいもの」と「今日が40度の暑い日だとして飲みたいもの」の両方を入力してください。', true);
+          els.submit.disabled = false;
+          return;
+        }
+
         const payload = {
           selectedProducts: state.selectedProducts.map((p) => {
             if (!p) return null;
             const { selectedAt, ...rest } = p;
             return rest;
           }),
-          freeText: els.freeText.value.trim(),
+          questionAnswers: {
+            now: nowAnswer,
+            hotDay: hotAnswer,
+          },
         };
 
         google.script.run
@@ -1051,7 +1143,11 @@
             setStatus('ご回答ありがとうございました！みんなの推しTOP3を集計します。');
             state.selectedProducts = [null, null, null];
             state.activeRank = 0;
-            els.freeText.value = '';
+            state.questionAnswers = { now: '', hot: '' };
+            state.activeQuestion = 'now';
+            setActiveQuestionTab('now');
+            if (els.answerNow) els.answerNow.value = '';
+            if (els.answerHot) els.answerHot.value = '';
             renderProducts();
             renderRankList();
             els.submit.disabled = false;
@@ -1156,12 +1252,35 @@
         els.makerHighlight.classList.add('visible');
       }
 
+      function setupQuestionInputs() {
+        setActiveQuestionTab(state.activeQuestion);
+        if (els.questionTabs) {
+          els.questionTabs.querySelectorAll('.question-tab').forEach((tab) => {
+            tab.addEventListener('click', () => {
+              const key = tab.dataset.key || 'now';
+              setActiveQuestionTab(key);
+            });
+          });
+        }
+        if (els.answerNow) {
+          els.answerNow.addEventListener('input', (event) => {
+            state.questionAnswers.now = event.target.value;
+          });
+        }
+        if (els.answerHot) {
+          els.answerHot.addEventListener('input', (event) => {
+            state.questionAnswers.hot = event.target.value;
+          });
+        }
+      }
+
       function closeTab() {
         window.close();
       }
 
       function load() {
         setStatus('読み込み中...');
+        setupQuestionInputs();
         if (typeof google === 'undefined' || !google.script?.run) {
           setStatus('プレビューではデータを読み込めません。Apps Script 環境でお試しください。', true);
           els.submit.disabled = true;

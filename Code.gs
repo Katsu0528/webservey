@@ -57,16 +57,21 @@ function submitResponse(payload) {
     : [];
   if (products.length !== 3) throw new Error('推しドリンクのTOP3を1位から3位まで選択してください。');
 
+  const questions = payload.questionAnswers || {};
+  const nowDrink = String(questions.now || '').trim();
+  const hotDayDrink = String(questions.hotDay || questions.hot || '').trim();
+  if (!nowDrink || !hotDayDrink) throw new Error('「今飲みたいもの」と「今日が40度の暑い日だとして飲みたいもの」の両方に回答してください。');
+
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const email = Session.getActiveUser().getEmail() || payload.email || 'anonymous';
 
-  appendResponseRow(ss, email, products, payload.freeText);
-  appendAggregateRows(ss, email, products, payload.freeText);
+  appendResponseRow(ss, email, products, payload.freeText, nowDrink, hotDayDrink);
+  appendAggregateRows(ss, email, products, payload.freeText, nowDrink, hotDayDrink);
 
   return { ok: true };
 }
 
-function appendResponseRow(ss, email, rankedProducts, freeText) {
+function appendResponseRow(ss, email, rankedProducts, freeText, nowDrink, hotDayDrink) {
   const sheet = ss.getSheetByName(RESPONSE_SHEET_NAME) || ss.insertSheet(RESPONSE_SHEET_NAME);
   if (sheet.getLastRow() === 0) {
     sheet.appendRow([
@@ -85,6 +90,8 @@ function appendResponseRow(ss, email, rankedProducts, freeText) {
       '3位商品名',
       '3位価格',
       '自由記入',
+      '今飲みたいもの',
+      '今日が40度の暑い日だとして、飲みたいもの',
     ]);
   }
 
@@ -100,10 +107,12 @@ function appendResponseRow(ss, email, rankedProducts, freeText) {
     ...buildProductCells(rankedProducts[1]),
     ...buildProductCells(rankedProducts[2]),
     freeText || '',
+    nowDrink || '',
+    hotDayDrink || '',
   ]);
 }
 
-function appendAggregateRows(ss, email, rankedProducts, freeText) {
+function appendAggregateRows(ss, email, rankedProducts, freeText, nowDrink, hotDayDrink) {
   const sheet = ss.getSheetByName(AGGREGATE_SHEET_NAME) || ss.insertSheet(AGGREGATE_SHEET_NAME);
   if (sheet.getLastRow() === 0) {
     sheet.appendRow([
@@ -116,6 +125,8 @@ function appendAggregateRows(ss, email, rankedProducts, freeText) {
       '商品名',
       '価格',
       '自由記入',
+      '今飲みたいもの',
+      '今日が40度の暑い日だとして、飲みたいもの',
     ]);
   }
 
@@ -130,6 +141,8 @@ function appendAggregateRows(ss, email, rankedProducts, freeText) {
       (product && product.product) || '',
       (product && product.price) || '',
       idx === 0 ? freeText || '' : '',
+      idx === 0 ? nowDrink || '' : '',
+      idx === 0 ? hotDayDrink || '' : '',
     ]);
   });
 
