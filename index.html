@@ -191,7 +191,7 @@
         padding: 12px;
         background: linear-gradient(180deg, #ffffff 0%, #f7f8ff 60%, #eef1ff 100%);
         transition: 0.18s;
-        cursor: pointer;
+        cursor: grab;
         display: flex;
         flex-direction: column;
         gap: 10px;
@@ -263,6 +263,12 @@
       .rank-item.active {
         border-color: var(--accent);
         box-shadow: 0 10px 20px rgba(255, 126, 182, 0.15);
+      }
+
+      .rank-item.drag-over {
+        border-color: var(--accent);
+        background: #fff7fd;
+        box-shadow: 0 12px 26px rgba(255, 126, 182, 0.2);
       }
 
       .rank-label {
@@ -631,14 +637,15 @@
               <p class="eyebrow">STEP 1</p>
               <h2>☕ あなたの推しドリンクTOP3を教えて!</h2>
               <p class="section-lead">
-                カテゴリーを選ぶと、ズラリと商品が登場! 画像をポチッと押した順番が「1位→3pt / 2位→2pt / 3位→1pt」で集計されます。
-                <br />右の順位枠（1位/2位/3位）をクリックしてアクティブにし、商品画像を押すとその順位が入れ替わります。
+                カテゴリーを選ぶと、ズラリと商品が登場! 好きなドリンク画像を右の「1位〜3位」枠へドラッグ&ドロップしてください。
+                <br />枠の中でもドラッグで順番を入れ替えられます。1位→3pt / 2位→2pt / 3位→1ptで集計されます。
               </p>
             </div>
             <div class="counter" id="product-count">0/3</div>
           </div>
           <div class="note">
-            カテゴリータブを切り替えると、そのカテゴリのドリンクが表示されます。重複を選んだ場合は古いほうの順位が解除されます。
+            カテゴリータブを切り替えると、そのカテゴリのドリンクが表示されます。商品画像を順位枠にドラッグして選び、枠内のドラッグで並び替えできます。
+            重複を選んだ場合は古いほうの順位が解除されます。
           </div>
           <div class="selection-layout">
             <div class="vending-area">
@@ -703,6 +710,11 @@
         selectedProducts: [null, null, null],
         activeRank: 0,
       };
+      const dragState = {
+        source: null,
+        product: null,
+        fromIndex: null,
+      };
       const FALLBACK_IMAGE =
         'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="360" height="240" viewBox="0 0 360 240"><rect width="360" height="240" fill="%23f2f4f7"/><rect x="30" y="30" width="300" height="180" rx="12" fill="none" stroke="%23c3cad4" stroke-width="8"/><path d="M96 166l48-58 48 58 48-72 24 32" fill="none" stroke="%23c3cad4" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><circle cx="138" cy="90" r="22" fill="%23d8dde5"/></svg>';
       const RANK_POINTS = [3, 2, 1];
@@ -766,6 +778,61 @@
 
         wrapper.appendChild(img);
         return wrapper;
+      }
+
+      function resetDragState() {
+        dragState.source = null;
+        dragState.product = null;
+        dragState.fromIndex = null;
+        if (els.rankList) {
+          els.rankList.querySelectorAll('.rank-item').forEach((row) => row.classList.remove('drag-over'));
+        }
+      }
+
+      function startCatalogDrag(event, item) {
+        dragState.source = 'catalog';
+        dragState.product = item;
+        dragState.fromIndex = null;
+        if (event?.dataTransfer) {
+          event.dataTransfer.effectAllowed = 'move';
+          event.dataTransfer.setData('text/plain', `${item.category}:${item.product}`);
+        }
+      }
+
+      function startRankDrag(event, index) {
+        const product = state.selectedProducts[index];
+        if (!product) return;
+        dragState.source = 'rank';
+        dragState.product = product;
+        dragState.fromIndex = index;
+        if (event?.dataTransfer) {
+          event.dataTransfer.effectAllowed = 'move';
+          event.dataTransfer.setData('text/plain', `${product.category}:${product.product}`);
+        }
+      }
+
+      function handleRankDragOver(event) {
+        event.preventDefault();
+        event.dataTransfer && (event.dataTransfer.dropEffect = 'move');
+        event.currentTarget.classList.add('drag-over');
+      }
+
+      function handleRankDragLeave(event) {
+        event.preventDefault();
+        event.currentTarget.classList.remove('drag-over');
+      }
+
+      function handleRankDrop(event, index) {
+        event.preventDefault();
+        event.currentTarget.classList.remove('drag-over');
+        if (!dragState.product) return;
+
+        if (dragState.source === 'rank') {
+          reorderSelectedProducts(dragState.fromIndex, index);
+        } else {
+          placeProductAtRank(dragState.product, index);
+        }
+        resetDragState();
       }
 
       function updateCount() {
@@ -860,6 +927,9 @@
           card.appendChild(meta);
           card.appendChild(title);
 
+          card.draggable = true;
+          card.addEventListener('dragstart', (event) => startCatalogDrag(event, item));
+          card.addEventListener('dragend', resetDragState);
           card.addEventListener('click', () => assignProductToActiveRank(item));
           els.productGrid.appendChild(card);
         });
@@ -867,20 +937,41 @@
         updateProductSelections();
       }
 
-      function assignProductToActiveRank(item) {
-        const now = Date.now();
-        const active = state.activeRank ?? 0;
-        const duplicateIndex = state.selectedProducts.findIndex(
-          (p) => p && p.category === item.category && p.product === item.product
-        );
+      function placeProductAtRank(item, targetIndex) {
+        if (!item) return;
+        const index = typeof targetIndex === 'number' ? targetIndex : 0;
+        const products = [...state.selectedProducts];
+        const duplicateIndex = products.findIndex((p) => p && p.category === item.category && p.product === item.product);
 
-        if (duplicateIndex >= 0 && duplicateIndex !== active) {
-          state.selectedProducts[duplicateIndex] = null;
+        if (duplicateIndex >= 0 && duplicateIndex !== index) {
+          products[duplicateIndex] = null;
         }
 
-        state.selectedProducts[active] = { ...item, selectedAt: now };
+        products[index] = { ...item, selectedAt: Date.now() };
+        state.selectedProducts = products.slice(0, 3);
+        state.activeRank = index;
         updateProductSelections();
         renderRankList();
+      }
+
+      function reorderSelectedProducts(fromIndex, toIndex) {
+        if (fromIndex === toIndex || fromIndex == null || toIndex == null) return;
+        const products = [...state.selectedProducts];
+        const [moving] = products.splice(fromIndex, 1);
+        if (!moving) return;
+        products.splice(toIndex, 0, moving);
+        while (products.length < 3) products.push(null);
+        state.selectedProducts = products.slice(0, 3);
+        state.activeRank = toIndex;
+        updateProductSelections();
+        renderRankList();
+      }
+
+      function assignProductToActiveRank(item) {
+        const emptyIndex = state.selectedProducts.findIndex((p) => !p);
+        const activeIndex = typeof state.activeRank === 'number' ? state.activeRank : 0;
+        const targetIndex = emptyIndex >= 0 && state.selectedProducts[activeIndex] ? emptyIndex : activeIndex;
+        placeProductAtRank(item, targetIndex);
       }
 
       function renderRankList() {
@@ -891,6 +982,11 @@
         state.selectedProducts.forEach((item, idx) => {
           const row = document.createElement('div');
           row.className = 'rank-item' + (state.activeRank === idx ? ' active' : '');
+          row.dataset.index = idx;
+          row.addEventListener('dragover', handleRankDragOver);
+          row.addEventListener('dragenter', handleRankDragOver);
+          row.addEventListener('dragleave', handleRankDragLeave);
+          row.addEventListener('drop', (event) => handleRankDrop(event, idx));
           row.addEventListener('click', () => {
             state.activeRank = idx;
             renderRankList();
@@ -911,11 +1007,16 @@
             meta.textContent = `${item.category} / ${item.maker || 'メーカー不明'} / ${item.price || ''}`;
             content.appendChild(title);
             content.appendChild(meta);
+
+            row.draggable = true;
+            row.addEventListener('dragstart', (event) => startRankDrag(event, idx));
+            row.addEventListener('dragend', resetDragState);
           } else {
             const empty = document.createElement('div');
             empty.className = 'rank-empty';
             empty.textContent = '未選択';
             content.appendChild(empty);
+            row.removeAttribute('draggable');
           }
 
           row.appendChild(label);
