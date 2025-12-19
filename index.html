@@ -938,8 +938,6 @@
           <div class="post-submit-left">
             <div class="vending-preview">
               <p class="eyebrow">送信完了！</p>
-              <h3>あなたの投票でこんな自販機に</h3>
-              <p class="section-lead">今飲みたいものと同じ画像表示方法で、上位の商品を棚に並べました。</p>
               <div class="vending-window">
                 <div id="vending-shelf" class="vending-shelf"></div>
               </div>
@@ -1057,6 +1055,25 @@
         renderRankList();
       }
 
+      function extractDriveId(url) {
+        if (!url) return '';
+        const match = String(url).match(/[-\w]{25,}/);
+        return match ? match[0] : '';
+      }
+
+      function buildDriveImageUrl(fileId) {
+        return fileId ? `https://lh3.googleusercontent.com/d/${fileId}` : '';
+      }
+
+      function normalizeImageUrl(raw) {
+        if (!raw) return '';
+        const value = String(raw).trim();
+        if (value.startsWith('data:')) return value;
+        if (/^https?:\/\//i.test(value) && !value.includes('drive.google.com')) return value;
+        const driveId = extractDriveId(value);
+        return driveId ? buildDriveImageUrl(driveId) : '';
+      }
+
       function createImageElement(src, alt) {
         const wrapper = document.createElement('div');
         wrapper.className = 'media-frame';
@@ -1066,13 +1083,15 @@
         img.alt = alt || 'image preview';
         img.referrerPolicy = 'no-referrer';
 
+        const normalizedSrc = normalizeImageUrl(src);
+
         const applyFallback = () => {
           img.onerror = null;
           img.src = FALLBACK_IMAGE;
         };
 
         img.onerror = applyFallback;
-        img.src = src || FALLBACK_IMAGE;
+        img.src = normalizedSrc || FALLBACK_IMAGE;
 
         wrapper.appendChild(img);
         return wrapper;
@@ -1306,7 +1325,7 @@
           thumbImg.loading = 'lazy';
           thumbImg.alt = item?.product || '選択なし';
           thumbImg.referrerPolicy = 'no-referrer';
-          thumbImg.src = item?.imageUrl || FALLBACK_IMAGE;
+          thumbImg.src = normalizeImageUrl(item?.imageUrl) || FALLBACK_IMAGE;
           thumbImg.onerror = () => {
             thumbImg.onerror = null;
             thumbImg.src = FALLBACK_IMAGE;
