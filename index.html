@@ -1061,21 +1061,69 @@
         return match ? match[0] : '';
       }
 
+      function buildDrivePreviewUrl(fileId) {
+        return fileId ? `https://drive.google.com/file/d/${fileId}/preview` : '';
+      }
+
+      function buildDriveViewUrl(fileId) {
+        return fileId ? `https://lh3.googleusercontent.com/d/${fileId}` : '';
+      }
+
       function buildDriveImageUrl(fileId) {
         return fileId ? `https://lh3.googleusercontent.com/d/${fileId}` : '';
       }
 
-      function normalizeImageUrl(raw) {
-        if (!raw) return '';
-        const value = String(raw).trim();
-        if (value.startsWith('data:')) return value;
+      function buildImageSourceList(raw) {
+        const sources = [];
+        if (!raw) return sources;
 
-        const isHttp = /^https?:\/\//i.test(value);
-        const isDriveHost = /(?:drive\.google\.com|googleusercontent\.com)/i.test(value);
-        if (isHttp && !isDriveHost) return value;
+        const add = (url) => {
+          if (url && !sources.includes(url)) {
+            sources.push(url);
+          }
+        };
+
+        const value = String(raw).trim();
+        if (value.startsWith('data:')) {
+          add(value);
+          return sources;
+        }
 
         const driveId = extractDriveId(value);
-        return driveId ? buildDriveImageUrl(driveId) : '';
+        const isHttp = /^https?:\/\//i.test(value);
+        const isDriveHost = /(?:drive\.google\.com|googleusercontent\.com)/i.test(value);
+
+        if (driveId) {
+          add(buildDriveViewUrl(driveId));
+          add(`https://drive.google.com/uc?export=view&id=${driveId}`);
+          add(`https://drive.google.com/uc?id=${driveId}&export=download`);
+          add(buildDrivePreviewUrl(driveId));
+        }
+
+        if (isHttp && (!driveId || !isDriveHost)) {
+          add(value);
+        } else if (isHttp && !sources.length) {
+          add(value);
+        }
+
+        return sources;
+      }
+
+      function normalizeImageUrl(raw) {
+        return buildImageSourceList(raw)[0] || '';
+      }
+
+      function applyImageSources(img, raw) {
+        const sources = [...buildImageSourceList(raw), FALLBACK_IMAGE];
+        let index = 0;
+
+        const tryNext = () => {
+          const nextSrc = sources[index++];
+          img.onerror = index < sources.length ? tryNext : null;
+          img.src = nextSrc || FALLBACK_IMAGE;
+        };
+
+        tryNext();
       }
 
       function createImageElement(src, alt) {
@@ -1087,15 +1135,7 @@
         img.alt = alt || 'image preview';
         img.referrerPolicy = 'no-referrer';
 
-        const normalizedSrc = normalizeImageUrl(src);
-
-        const applyFallback = () => {
-          img.onerror = null;
-          img.src = FALLBACK_IMAGE;
-        };
-
-        img.onerror = applyFallback;
-        img.src = normalizedSrc || FALLBACK_IMAGE;
+        applyImageSources(img, src);
 
         wrapper.appendChild(img);
         return wrapper;
@@ -1329,11 +1369,7 @@
           thumbImg.loading = 'lazy';
           thumbImg.alt = item?.product || '選択なし';
           thumbImg.referrerPolicy = 'no-referrer';
-          thumbImg.src = normalizeImageUrl(item?.imageUrl) || FALLBACK_IMAGE;
-          thumbImg.onerror = () => {
-            thumbImg.onerror = null;
-            thumbImg.src = FALLBACK_IMAGE;
-          };
+          applyImageSources(thumbImg, item?.imageUrl);
           thumb.appendChild(thumbImg);
 
           const content = document.createElement('div');
