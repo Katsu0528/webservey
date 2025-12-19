@@ -263,6 +263,27 @@
         box-shadow: var(--shadow);
       }
 
+      .selection-panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .selection-question-panels {
+        margin: 8px 0 12px;
+        width: 100%;
+      }
+
+      .selection-question-panels .question-panel {
+        margin-top: 0;
+      }
+
+      .selection-question-panels .question-panel + .question-panel {
+        margin-top: 6px;
+      }
+
       .selection-panel h3 {
         margin: 0 0 10px;
         font-size: 16px;
@@ -717,6 +738,10 @@
         h1 {
           font-size: 24px;
         }
+        .selection-panel-header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
         .media-frame {
           min-height: 180px;
         }
@@ -760,29 +785,9 @@
           <div class="question-block">
             <p class="eyebrow">質問1</p>
             <h3>💬 タブを切り替えて各シーンの1位〜3位を選んでください</h3>
-            <p class="section-lead">「今飲みたいもの」「35度の暑い日なら？」の2つをそれぞれドラッグ&ドロップで3つ埋めてください。</p>
-            <div class="question-tabs" id="question-tabs">
-              <button class="question-tab active" data-key="now">今飲みたいもの</button>
-              <button class="question-tab" data-key="hotDay">35度の暑い日なら？</button>
-            </div>
-            <div class="question-panels" id="question-panels">
-              <div class="question-panel active" data-key="now">
-                <p class="required-hint">* 「今飲みたいもの」を1位〜3位まで選んでください。</p>
-                <ul class="question-hints">
-                  <li>商品画像を右の「1位〜3位」枠へドラッグ&ドロップ。</li>
-                  <li>枠の中でもドラッグで順番を入れ替えられます。</li>
-                  <li>同じ商品を重複して選んだ場合は古いほうの順位が解除されます。</li>
-                </ul>
-              </div>
-              <div class="question-panel" data-key="hotDay">
-                <p class="required-hint">* 「35度の暑い日なら？」を1位〜3位まで選んでください。</p>
-                <ul class="question-hints">
-                  <li>選び方は同じくドラッグ&ドロップ。3つ埋めてカウンターを「3/3」にしてください。</li>
-                  <li>枠内ドラッグで並び替えできます。</li>
-                  <li>重複選択時は古いほうの順位が解除されます。</li>
-                </ul>
-              </div>
-            </div>
+            <p class="section-lead">
+              「今飲みたいもの」「35度の暑い日なら？」の2つを、右側の順位ウィンドウ上部にあるタブで切り替えながらドラッグ&ドロップで3つ埋めてください。
+            </p>
           </div>
           <div class="note">
             カテゴリータブを切り替えると、そのカテゴリのドリンクが表示されます。商品画像を順位枠にドラッグして選び、枠内のドラッグで並び替えできます。
@@ -796,7 +801,31 @@
               </div>
             </div>
             <aside class="selection-panel">
-              <h3>あなたのTOP3</h3>
+              <div class="selection-panel-header">
+                <h3>あなたのTOP3</h3>
+                <div class="question-tabs" id="question-tabs">
+                  <button class="question-tab active" data-key="now">今飲みたいもの</button>
+                  <button class="question-tab" data-key="hotDay">35度の暑い日なら？</button>
+                </div>
+              </div>
+              <div class="question-panels selection-question-panels" id="question-panels">
+                <div class="question-panel active" data-key="now">
+                  <p class="required-hint">* 「今飲みたいもの」を1位〜3位まで選んでください。</p>
+                  <ul class="question-hints">
+                    <li>商品画像を右の「1位〜3位」枠へドラッグ&ドロップ。</li>
+                    <li>枠の中でもドラッグで順番を入れ替えられます。</li>
+                    <li>同じ商品を重複して選んだ場合は古いほうの順位が解除されます。</li>
+                  </ul>
+                </div>
+                <div class="question-panel" data-key="hotDay">
+                  <p class="required-hint">* 「35度の暑い日なら？」を1位〜3位まで選んでください。</p>
+                  <ul class="question-hints">
+                    <li>選び方は同じくドラッグ&ドロップ。3つ埋めてカウンターを「3/3」にしてください。</li>
+                    <li>枠内ドラッグで並び替えできます。</li>
+                    <li>重複選択時は古いほうの順位が解除されます。</li>
+                  </ul>
+                </div>
+              </div>
               <div class="rank-list" id="rank-list"></div>
             </aside>
           </div>
