@@ -10,6 +10,7 @@ const PRODUCT_FOLDER_ID = '18fA4HRavIBTM2aPL-OqVaWhjRRgBhlKg';
 const MAKER_BADGE_FOLDER_ID = '1AJd4BTFTVrLNep44PDz1AuwSF_5TFxdx';
 const RESPONSE_SHEET_NAME = '回答';
 const AGGREGATE_SHEET_NAME = '集計';
+const FREE_TEXT_SHEET_NAME = '自由記入';
 const RANK_POINTS = [3, 2, 1];
 
 const categoryFolderCache = {};
@@ -62,6 +63,7 @@ function submitResponse(payload) {
 
   appendResponseRow(ss, email, nowRanking, hotRanking, payload.freeText);
   appendAggregateRows(ss, email, nowRanking, hotRanking, payload.freeText);
+  appendFreeTextRow(ss, email, payload.freeText);
 
   return { ok: true };
 }
@@ -166,6 +168,18 @@ function appendAggregateRows(ss, email, nowRanking, hotRanking, freeText) {
   refreshPointSummary(sheet);
 }
 
+function appendFreeTextRow(ss, email, freeText) {
+  const text = typeof freeText === 'string' ? freeText.trim() : '';
+  if (!text) return;
+
+  const sheet = ss.getSheetByName(FREE_TEXT_SHEET_NAME) || ss.insertSheet(FREE_TEXT_SHEET_NAME);
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(['タイムスタンプ', 'メールアドレス', '自由記入']);
+  }
+
+  sheet.appendRow([new Date(), email, text]);
+}
+
 function refreshPointSummary(sheet) {
   const DATA_COLUMNS = 10;
   const SUMMARY_START_COL = 11; // Column K
@@ -219,27 +233,35 @@ function refreshPointSummary(sheet) {
 function getRankingSummary() {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const sheet = ss.getSheetByName(AGGREGATE_SHEET_NAME);
-  if (!sheet) return { products: [], makerLeader: null };
+  if (!sheet) return { products: [], makerLeader: null, rankings: { now: [], hotDay: [], makers: [] } };
 
   const lastRow = sheet.getLastRow();
   const DATA_COLUMNS = 10;
-  if (lastRow <= 1) return { products: [], makerLeader: null };
+  if (lastRow <= 1) return { products: [], makerLeader: null, rankings: { now: [], hotDay: [], makers: [] } };
 
   const rows = sheet.getRange(2, 1, lastRow - 1, DATA_COLUMNS).getValues();
-  const { productMap, makerMap } = buildRankingMaps(rows);
+  const { productMap, makerMap, scenarioMap } = buildRankingMaps(rows);
   const products = buildProductRanking(productMap).slice(0, 5);
   const makerLeader = buildMakerLeader(makerMap);
+  const rankings = {
+    now: buildProductRanking(scenarioMap.now).slice(0, 5),
+    hotDay: buildProductRanking(scenarioMap.hotDay).slice(0, 5),
+    makers: buildMakerRanking(makerMap),
+  };
 
-  return { products, makerLeader };
+  return { products, makerLeader, rankings };
 }
 
 function buildRankingMaps(rows) {
   const productMap = {};
   const makerMap = {};
+  const scenarioMap = { now: {}, hotDay: {} };
 
   rows.forEach((row) => {
     const timestamp = row[0];
     if (!timestamp) return;
+    const scenarioLabel = row[2] || '';
+    const scenarioKey = normalizeScenarioKey(scenarioLabel);
     const points = Number(row[4]) || 0;
     const category = row[5] || '';
     const maker = row[6] || '';
@@ -254,6 +276,14 @@ function buildRankingMaps(rows) {
     productMap[productKey].points += points;
     productMap[productKey].count += 1;
 
+    if (scenarioKey && scenarioMap[scenarioKey]) {
+      if (!scenarioMap[scenarioKey][productKey]) {
+        scenarioMap[scenarioKey][productKey] = { category, maker, product, price, points: 0, count: 0 };
+      }
+      scenarioMap[scenarioKey][productKey].points += points;
+      scenarioMap[scenarioKey][productKey].count += 1;
+    }
+
     if (!makerMap[makerKey]) {
       makerMap[makerKey] = { maker: maker || 'メーカー不明', points: 0, count: 0 };
     }
@@ -261,10 +291,12 @@ function buildRankingMaps(rows) {
     makerMap[makerKey].count += 1;
   });
 
-  return { productMap, makerMap };
+  return { productMap, makerMap, scenarioMap };
 }
 
 function buildProductRanking(productMap) {
+  if (!productMap) return [];
+
   return Object.values(productMap)
     .sort((a, b) => {
       if (b.points !== a.points) return b.points - a.points;
@@ -290,6 +322,25 @@ function buildMakerLeader(makerMap) {
   const leader = makers[0];
   const imageUrl = getMakerBadgeImageUrl(leader.maker);
   return { ...leader, imageUrl };
+}
+
+function buildMakerRanking(makerMap) {
+  if (!makerMap) return [];
+
+  const makers = Object.values(makerMap).sort((a, b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    return String(a.maker).localeCompare(String(b.maker), 'ja');
+  });
+
+  return makers.slice(0, 5).map((item) => ({ ...item, imageUrl: getMakerBadgeImageUrl(item.maker) }));
+}
+
+function normalizeScenarioKey(label) {
+  const text = String(label || '').trim();
+  if (!text) return null;
+  if (text.includes('35') || text.includes('暑い日')) return 'hotDay';
+  if (text.includes('今飲みたい')) return 'now';
+  return null;
 }
 
 function buildSheetDataMap(ss) {

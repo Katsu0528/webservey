@@ -406,7 +406,7 @@
       .card .price {
         font-size: 16px;
         font-weight: 800;
-        color: #0b2b70;
+        color: #1e5ac9;
       }
 
       .card .meta,
@@ -691,9 +691,10 @@
       }
 
       .ranking-rank .pts {
-        background: rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.88);
         padding: 4px 10px;
         border-radius: 10px;
+        color: #1f2430;
       }
 
       .ranking-meta {
@@ -728,10 +729,10 @@
       }
 
       .ranking-layout {
-        display: grid;
-        grid-template-columns: minmax(280px, 1fr) 1.2fr;
+        display: flex;
+        flex-direction: column;
         gap: 16px;
-        align-items: start;
+        align-items: stretch;
         margin-top: 14px;
       }
 
@@ -739,6 +740,49 @@
         display: flex;
         flex-direction: column;
         gap: 12px;
+      }
+
+      .ranking-columns {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 14px;
+        margin-top: 6px;
+      }
+
+      .ranking-column {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px;
+        background: #fff;
+        box-shadow: var(--shadow);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .ranking-column-header {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .ranking-column h3 {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .ranking-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .ranking-card.compact .media-frame {
+        min-height: 160px;
+      }
+
+      .ranking-card.compact .ranking-rank {
+        width: fit-content;
       }
 
       .maker-highlight.visible {
@@ -780,9 +824,6 @@
 
       @media (max-width: 600px) {
         .selection-layout {
-          grid-template-columns: 1fr;
-        }
-        .ranking-layout {
           grid-template-columns: 1fr;
         }
         h1 {
@@ -907,7 +948,7 @@
           </div>
           <div class="ranking-results">
             <div class="status" id="ranking-status">最新の順位を読み込んでいます...</div>
-            <div id="ranking-list" class="ranking-grid"></div>
+            <div id="ranking-list" class="ranking-grid ranking-columns"></div>
           </div>
         </div>
       </section>
@@ -1355,11 +1396,10 @@
 
         google.script.run
           .withSuccessHandler((data) => {
-            const products = Array.isArray(data?.products) ? data.products : Array.isArray(data) ? data : [];
-            const makerLeader = !Array.isArray(data) ? data?.makerLeader : null;
-            renderMakerHighlight(makerLeader);
-            renderRankingList(products);
-            setRankingStatus(products.length ? '' : 'まだ集計データがありません。最初の投票をお待ちしています。');
+            const rankings = normalizeRankingResponse(data);
+            renderMakerHighlight(rankings.leader);
+            const hasData = renderRankingColumns(rankings);
+            setRankingStatus(hasData ? '' : 'まだ集計データがありません。最初の投票をお待ちしています。');
           })
           .withFailureHandler((err) => {
             setRankingStatus(err?.message || '順位の取得に失敗しました。少し時間をおいて再度お試しください。', true);
@@ -1367,46 +1407,128 @@
           .getRankingSummary();
       }
 
-      function renderRankingList(items) {
+      function normalizeRankingResponse(data) {
+        const rankings = data?.rankings || {};
+        const baseProducts = Array.isArray(data?.products) ? data.products : Array.isArray(data) ? data : [];
+        const now = Array.isArray(rankings.now) ? rankings.now : [];
+        const hotDay = Array.isArray(rankings.hotDay) ? rankings.hotDay : [];
+        const makers = Array.isArray(rankings.makers) ? rankings.makers : [];
+        const leader = (!Array.isArray(data) && data?.makerLeader) || makers[0] || null;
+
+        return {
+          now: now.length ? now : baseProducts,
+          hotDay: hotDay.length ? hotDay : baseProducts,
+          makers,
+          leader,
+        };
+      }
+
+      function renderRankingColumns(rankings) {
         els.rankingList.innerHTML = '';
-        const topItems = Array.isArray(items) ? items.slice(0, 5) : [];
-        if (!topItems.length) return;
+        const columns = [
+          { key: 'makers', title: 'メーカー順位', subtitle: '合計Pt順のTOP5', items: rankings?.makers || [], type: 'maker' },
+          { key: 'hotDay', title: '35度以上の暑い日なら？', subtitle: 'みんなのTOP5', items: rankings?.hotDay || [], type: 'product' },
+          { key: 'now', title: '今飲みたいもの', subtitle: 'みんなのTOP5', items: rankings?.now || [], type: 'product' },
+        ];
+        let hasData = false;
 
-        topItems.forEach((item, idx) => {
-          const card = document.createElement('div');
-          card.className = 'ranking-card';
+        columns.forEach((column) => {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'ranking-column';
 
-          const rank = document.createElement('div');
-          rank.className = 'ranking-rank';
-          rank.innerHTML = `<span>${idx + 1} 位</span><span class="pts">${item.points || 0} Pt</span>`;
+          const header = document.createElement('div');
+          header.className = 'ranking-column-header';
+          const title = document.createElement('h3');
+          title.textContent = column.title;
+          const subtitle = document.createElement('p');
+          subtitle.className = 'section-lead';
+          subtitle.textContent = column.subtitle;
+          header.appendChild(title);
+          header.appendChild(subtitle);
+          wrapper.appendChild(header);
 
-          const img = createImageElement(item.imageUrl, item.product);
+          const stack = document.createElement('div');
+          stack.className = 'ranking-stack';
+          const items = Array.isArray(column.items) ? column.items.slice(0, 5) : [];
 
+          if (!items.length) {
+            const empty = document.createElement('div');
+            empty.className = 'empty';
+            empty.textContent = 'まだデータがありません。';
+            stack.appendChild(empty);
+          } else {
+            hasData = true;
+            items.forEach((item, idx) => {
+              stack.appendChild(createRankingCard(item, idx, column.type));
+            });
+          }
+
+          wrapper.appendChild(stack);
+          els.rankingList.appendChild(wrapper);
+        });
+
+        return hasData;
+      }
+
+      function createRankingCard(item, idx, type = 'product') {
+        const entry = item || {};
+        const card = document.createElement('div');
+        card.className = 'ranking-card compact';
+
+        const rank = document.createElement('div');
+        rank.className = 'ranking-rank';
+        rank.innerHTML = `<span>${idx + 1} 位</span><span class="pts">${entry.points || 0} Pt</span>`;
+        card.appendChild(rank);
+
+        if (type === 'maker') {
+          const img = createImageElement(entry.imageUrl || FALLBACK_IMAGE, entry.maker || 'メーカー');
           const title = document.createElement('h4');
-          title.textContent = item.product || '商品名不明';
-
+          title.textContent = entry.maker || 'メーカー不明';
           const meta = document.createElement('div');
           meta.className = 'ranking-meta';
-          const maker = document.createElement('span');
-          maker.textContent = item.maker || 'メーカー不明';
-          const count = document.createElement('span');
-          count.textContent = `${item.count || 0} 票`;
-          meta.appendChild(maker);
-          meta.appendChild(count);
+          const votes = document.createElement('span');
+          votes.textContent = `${entry.count || 0} 票`;
+          const pts = document.createElement('span');
+          pts.textContent = 'メーカーPt集計';
 
-          const category = document.createElement('div');
-          category.className = 'muted';
-          const priceLabel = item.price ? ` / ${item.price}` : '';
-          category.textContent = `${item.category || 'カテゴリ不明'}${priceLabel}`;
+          meta.appendChild(pts);
+          meta.appendChild(votes);
 
-          card.appendChild(rank);
+          const caption = document.createElement('div');
+          caption.className = 'muted';
+          caption.textContent = 'メーカー別の合計Ptです。';
+
           card.appendChild(img);
           card.appendChild(title);
           card.appendChild(meta);
-          card.appendChild(category);
+          card.appendChild(caption);
+          return card;
+        }
 
-          els.rankingList.appendChild(card);
-        });
+        const img = createImageElement(entry.imageUrl, entry.product);
+        const title = document.createElement('h4');
+        title.textContent = entry.product || '商品名不明';
+
+        const meta = document.createElement('div');
+        meta.className = 'ranking-meta';
+        const maker = document.createElement('span');
+        maker.textContent = entry.maker || 'メーカー不明';
+        const count = document.createElement('span');
+        count.textContent = `${entry.count || 0} 票`;
+        meta.appendChild(maker);
+        meta.appendChild(count);
+
+        const category = document.createElement('div');
+        category.className = 'muted';
+        const priceLabel = entry.price ? ` / ${entry.price}` : '';
+        category.textContent = `${entry.category || 'カテゴリ不明'}${priceLabel}`;
+
+        card.appendChild(img);
+        card.appendChild(title);
+        card.appendChild(meta);
+        card.appendChild(category);
+
+        return card;
       }
 
       function renderMakerHighlight(maker) {
