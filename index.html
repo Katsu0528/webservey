@@ -217,6 +217,31 @@
         box-shadow: 0 16px 28px rgba(255, 126, 182, 0.26);
       }
 
+      .card[data-category='炭酸'] .media-frame {
+        background: linear-gradient(180deg, #f1e8ff 0%, #ffffff 65%, #f1e8ff 100%);
+        border-color: #e3d7ff;
+      }
+
+      .card[data-category='スポドリ'] .media-frame {
+        background: linear-gradient(180deg, #e8f5ff 0%, #ffffff 65%, #e8f5ff 100%);
+        border-color: #d5ecff;
+      }
+
+      .card[data-category='お茶'] .media-frame {
+        background: linear-gradient(180deg, #e8f6ec 0%, #ffffff 65%, #e8f6ec 100%);
+        border-color: #d6ebdd;
+      }
+
+      .card[data-category='水'] .media-frame {
+        background: linear-gradient(180deg, #f3f4f6 0%, #ffffff 65%, #f3f4f6 100%);
+        border-color: #e2e6ed;
+      }
+
+      .card[data-category='エナドリ'] .media-frame {
+        background: linear-gradient(180deg, #fff9e3 0%, #ffffff 65%, #fff9e3 100%);
+        border-color: #ffefb2;
+      }
+
       .selection-layout {
         display: grid;
         grid-template-columns: 2.2fr 1fr;
@@ -310,8 +335,8 @@
 
       .media-frame {
         width: 100%;
-        aspect-ratio: 2 / 3;
-        min-height: 220px;
+        aspect-ratio: 3 / 4;
+        min-height: 160px;
         border-radius: 12px;
         background: linear-gradient(145deg, #fdf3ff, #f0f5ff);
         border: 1px solid var(--border);
@@ -493,6 +518,18 @@
         display: block;
       }
 
+      .question-block {
+        margin: 12px 0 16px;
+        padding: 12px;
+        border: 1px dashed #ffd7eb;
+        background: linear-gradient(120deg, rgba(255, 126, 182, 0.06), rgba(108, 140, 255, 0.06));
+        border-radius: 14px;
+      }
+
+      .question-block .section-lead {
+        margin-bottom: 10px;
+      }
+
       .question-tabs {
         display: inline-flex;
         gap: 10px;
@@ -541,16 +578,13 @@
         font-size: 13px;
       }
 
-      .question-block {
-        margin: 12px 0 16px;
-        padding: 12px;
-        border: 1px dashed #ffd7eb;
-        background: linear-gradient(120deg, rgba(255, 126, 182, 0.06), rgba(108, 140, 255, 0.06));
-        border-radius: 14px;
-      }
-
-      .question-block .section-lead {
-        margin-bottom: 10px;
+      .question-hints {
+        margin: 0;
+        padding-left: 18px;
+        color: #3a3f52;
+        display: grid;
+        gap: 6px;
+        font-size: 14px;
       }
 
       .ranking-view {
@@ -725,28 +759,34 @@
           </div>
           <div class="question-block">
             <p class="eyebrow">質問1</p>
-            <h3>💬 「今飲みたいもの」と「今日が40度の暑い日」の2つを教えてください</h3>
-            <p class="section-lead">
-              どちらの質問も必須です。タブを切り替えてそれぞれ入力してください。
-            </p>
+            <h3>💬 タブを切り替えて各シーンの1位〜3位を選んでください</h3>
+            <p class="section-lead">「今飲みたいもの」「35度の暑い日なら？」の2つをそれぞれドラッグ&ドロップで3つ埋めてください。</p>
             <div class="question-tabs" id="question-tabs">
-              <button class="question-tab active" data-key="now">今飲みたいものは？</button>
-              <button class="question-tab" data-key="hot">今日が40度の暑い日だとして、飲みたいものは？</button>
+              <button class="question-tab active" data-key="now">今飲みたいもの</button>
+              <button class="question-tab" data-key="hotDay">35度の暑い日なら？</button>
             </div>
             <div class="question-panels" id="question-panels">
               <div class="question-panel active" data-key="now">
-                <p class="required-hint">*必須</p>
-                <textarea id="answer-now" placeholder="例：冷たいアイスコーヒー、シュワっとした炭酸など"></textarea>
+                <p class="required-hint">* 「今飲みたいもの」を1位〜3位まで選んでください。</p>
+                <ul class="question-hints">
+                  <li>商品画像を右の「1位〜3位」枠へドラッグ&ドロップ。</li>
+                  <li>枠の中でもドラッグで順番を入れ替えられます。</li>
+                  <li>同じ商品を重複して選んだ場合は古いほうの順位が解除されます。</li>
+                </ul>
               </div>
-              <div class="question-panel" data-key="hot">
-                <p class="required-hint">*必須</p>
-                <textarea id="answer-hot" placeholder="例：スポーツドリンク、キンキンに冷えたお茶 など"></textarea>
+              <div class="question-panel" data-key="hotDay">
+                <p class="required-hint">* 「35度の暑い日なら？」を1位〜3位まで選んでください。</p>
+                <ul class="question-hints">
+                  <li>選び方は同じくドラッグ&ドロップ。3つ埋めてカウンターを「3/3」にしてください。</li>
+                  <li>枠内ドラッグで並び替えできます。</li>
+                  <li>重複選択時は古いほうの順位が解除されます。</li>
+                </ul>
               </div>
             </div>
           </div>
           <div class="note">
             カテゴリータブを切り替えると、そのカテゴリのドリンクが表示されます。商品画像を順位枠にドラッグして選び、枠内のドラッグで並び替えできます。
-            重複を選んだ場合は古いほうの順位が解除されます。
+            重複を選んだ場合は古いほうの順位が解除されます。質問タブを切り替えて各シーンを3つずつ埋めてください。
           </div>
           <div class="selection-layout">
             <div class="vending-area">
@@ -802,18 +842,21 @@
       </section>
     </div>
 
-    <script>
+      <script>
+      const QUESTION_KEYS = [
+        { key: 'now', label: '今飲みたいもの' },
+        { key: 'hotDay', label: '35度の暑い日なら？' },
+      ];
+
       const state = {
         categories: [],
         selectedCategory: null,
-        selectedProducts: [null, null, null],
-        activeRank: 0,
-        questionAnswers: {
-          now: '',
-          hot: '',
+        selections: {
+          now: { selectedProducts: [null, null, null], activeRank: 0 },
+          hotDay: { selectedProducts: [null, null, null], activeRank: 0 },
         },
-        freeText: '',
         activeQuestion: 'now',
+        freeText: '',
       };
       const dragState = {
         source: null,
@@ -843,12 +886,17 @@
         makerHighlightDescription: document.getElementById('maker-highlight-description'),
         questionTabs: document.getElementById('question-tabs'),
         questionPanels: document.getElementById('question-panels'),
-        answerNow: document.getElementById('answer-now'),
-        answerHot: document.getElementById('answer-hot'),
         freeText: document.getElementById('free-text'),
       };
 
       const viewState = { current: 'form' };
+
+      function getSelection(key = state.activeQuestion) {
+        if (!state.selections[key]) {
+          state.selections[key] = { selectedProducts: [null, null, null], activeRank: 0 };
+        }
+        return state.selections[key];
+      }
 
       function setStatus(message, isError = false) {
         els.status.textContent = message || '';
@@ -880,6 +928,8 @@
             panel.classList.toggle('active', panel.dataset.key === key);
           });
         }
+        updateProductSelections();
+        renderRankList();
       }
 
       function createImageElement(src, alt) {
@@ -923,7 +973,8 @@
       }
 
       function startRankDrag(event, index) {
-        const product = state.selectedProducts[index];
+        const selection = getSelection();
+        const product = selection.selectedProducts[index];
         if (!product) return;
         dragState.source = 'rank';
         dragState.product = product;
@@ -959,15 +1010,16 @@
       }
 
       function updateCount() {
-        const filled = state.selectedProducts.filter(Boolean).length;
+        const filled = getSelection().selectedProducts.filter(Boolean).length;
         els.count.textContent = `${filled}/3`;
       }
 
       function updateProductSelections() {
         const cards = els.productGrid.querySelectorAll('.product-card');
+        const selection = getSelection();
         cards.forEach((card) => {
           const { category, product } = card.dataset;
-          const rankIndex = state.selectedProducts.findIndex(
+          const rankIndex = selection.selectedProducts.findIndex(
             (p) => p && p.category === category && p.product === product
           );
           const hasRank = rankIndex >= 0;
@@ -1063,7 +1115,8 @@
       function placeProductAtRank(item, targetIndex) {
         if (!item) return;
         const index = typeof targetIndex === 'number' ? targetIndex : 0;
-        const products = [...state.selectedProducts];
+        const selection = getSelection();
+        const products = [...selection.selectedProducts];
         const duplicateIndex = products.findIndex((p) => p && p.category === item.category && p.product === item.product);
 
         if (duplicateIndex >= 0 && duplicateIndex !== index) {
@@ -1071,29 +1124,31 @@
         }
 
         products[index] = { ...item, selectedAt: Date.now() };
-        state.selectedProducts = products.slice(0, 3);
-        state.activeRank = index;
+        selection.selectedProducts = products.slice(0, 3);
+        selection.activeRank = index;
         updateProductSelections();
         renderRankList();
       }
 
       function reorderSelectedProducts(fromIndex, toIndex) {
         if (fromIndex === toIndex || fromIndex == null || toIndex == null) return;
-        const products = [...state.selectedProducts];
+        const selection = getSelection();
+        const products = [...selection.selectedProducts];
         const [moving] = products.splice(fromIndex, 1);
         if (!moving) return;
         products.splice(toIndex, 0, moving);
         while (products.length < 3) products.push(null);
-        state.selectedProducts = products.slice(0, 3);
-        state.activeRank = toIndex;
+        selection.selectedProducts = products.slice(0, 3);
+        selection.activeRank = toIndex;
         updateProductSelections();
         renderRankList();
       }
 
       function assignProductToActiveRank(item) {
-        const emptyIndex = state.selectedProducts.findIndex((p) => !p);
-        const activeIndex = typeof state.activeRank === 'number' ? state.activeRank : 0;
-        const targetIndex = emptyIndex >= 0 && state.selectedProducts[activeIndex] ? emptyIndex : activeIndex;
+        const selection = getSelection();
+        const emptyIndex = selection.selectedProducts.findIndex((p) => !p);
+        const activeIndex = typeof selection.activeRank === 'number' ? selection.activeRank : 0;
+        const targetIndex = emptyIndex >= 0 && selection.selectedProducts[activeIndex] ? emptyIndex : activeIndex;
         placeProductAtRank(item, targetIndex);
       }
 
@@ -1102,16 +1157,17 @@
         els.rankList.innerHTML = '';
 
         const labels = ['1位 (3pt)', '2位 (2pt)', '3位 (1pt)'];
-        state.selectedProducts.forEach((item, idx) => {
+        const selection = getSelection();
+        selection.selectedProducts.forEach((item, idx) => {
           const row = document.createElement('div');
-          row.className = 'rank-item' + (state.activeRank === idx ? ' active' : '');
+          row.className = 'rank-item' + (selection.activeRank === idx ? ' active' : '');
           row.dataset.index = idx;
           row.addEventListener('dragover', handleRankDragOver);
           row.addEventListener('dragenter', handleRankDragOver);
           row.addEventListener('dragleave', handleRankDragLeave);
           row.addEventListener('drop', (event) => handleRankDrop(event, idx));
           row.addEventListener('click', () => {
-            state.activeRank = idx;
+            selection.activeRank = idx;
             renderRankList();
           });
 
@@ -1167,30 +1223,24 @@
         setStatus('');
         els.submit.disabled = true;
 
-        const filledProducts = state.selectedProducts.filter(Boolean);
-        if (filledProducts.length !== 3) {
-          setStatus('推しドリンクTOP3を3つ選んで、1位から3位まで順位をつけてください。', true);
-          els.submit.disabled = false;
-          return;
-        }
-
-        const nowAnswer = (state.questionAnswers.now || '').trim();
-        const hotAnswer = (state.questionAnswers.hot || '').trim();
-        if (!nowAnswer || !hotAnswer) {
-          setStatus('「今飲みたいもの」と「今日が40度の暑い日だとして飲みたいもの」の両方を入力してください。', true);
-          els.submit.disabled = false;
-          return;
+        const validations = [
+          { key: 'now', label: '「今飲みたいもの」' },
+          { key: 'hotDay', label: '「35度の暑い日なら？」' },
+        ];
+        for (const item of validations) {
+          const selection = getSelection(item.key);
+          const filledProducts = selection.selectedProducts.filter(Boolean);
+          if (filledProducts.length !== 3) {
+            setStatus(`${item.label}のTOP3を3つ選んで、1位から3位まで順位をつけてください。`, true);
+            els.submit.disabled = false;
+            return;
+          }
         }
 
         const payload = {
-          selectedProducts: state.selectedProducts.map((p) => {
-            if (!p) return null;
-            const { selectedAt, ...rest } = p;
-            return rest;
-          }),
-          questionAnswers: {
-            now: nowAnswer,
-            hotDay: hotAnswer,
+          questionRankings: {
+            now: getCleanProducts(getSelection('now')),
+            hotDay: getCleanProducts(getSelection('hotDay')),
           },
           freeText: (state.freeText || '').trim(),
         };
@@ -1198,15 +1248,13 @@
         google.script.run
           .withSuccessHandler(() => {
             setStatus('ご回答ありがとうございました！みんなの推しTOP3を集計します。');
-            state.selectedProducts = [null, null, null];
-            state.activeRank = 0;
-            state.questionAnswers = { now: '', hot: '' };
-            state.freeText = '';
+            QUESTION_KEYS.forEach(({ key }) => {
+              state.selections[key] = { selectedProducts: [null, null, null], activeRank: 0 };
+            });
             state.activeQuestion = 'now';
-            setActiveQuestionTab('now');
-            if (els.answerNow) els.answerNow.value = '';
-            if (els.answerHot) els.answerHot.value = '';
+            state.freeText = '';
             if (els.freeText) els.freeText.value = '';
+            setActiveQuestionTab('now');
             renderProducts();
             renderRankList();
             els.submit.disabled = false;
@@ -1311,26 +1359,23 @@
         els.makerHighlight.classList.add('visible');
       }
 
-      function setupQuestionInputs() {
-        setActiveQuestionTab(state.activeQuestion);
+      function getCleanProducts(selection) {
+        return selection.selectedProducts.map((p) => {
+          if (!p) return null;
+          const { selectedAt, ...rest } = p;
+          return rest;
+        });
+      }
+
+      function setupInputs() {
         if (els.questionTabs) {
           els.questionTabs.querySelectorAll('.question-tab').forEach((tab) => {
             tab.addEventListener('click', () => {
-              const key = tab.dataset.key || 'now';
-              setActiveQuestionTab(key);
+              setActiveQuestionTab(tab.dataset.key || 'now');
             });
           });
         }
-        if (els.answerNow) {
-          els.answerNow.addEventListener('input', (event) => {
-            state.questionAnswers.now = event.target.value;
-          });
-        }
-        if (els.answerHot) {
-          els.answerHot.addEventListener('input', (event) => {
-            state.questionAnswers.hot = event.target.value;
-          });
-        }
+        setActiveQuestionTab(state.activeQuestion);
         if (els.freeText) {
           els.freeText.addEventListener('input', (event) => {
             state.freeText = event.target.value;
@@ -1344,7 +1389,7 @@
 
       function load() {
         setStatus('読み込み中...');
-        setupQuestionInputs();
+        setupInputs();
         if (typeof google === 'undefined' || !google.script?.run) {
           setStatus('プレビューではデータを読み込めません。Apps Script 環境でお試しください。', true);
           els.submit.disabled = true;

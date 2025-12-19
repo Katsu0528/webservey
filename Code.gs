@@ -52,46 +52,57 @@ function getInitialData() {
 
 function submitResponse(payload) {
   if (!payload) throw new Error('送信データが見つかりません。');
-  const products = Array.isArray(payload.selectedProducts)
-    ? payload.selectedProducts.filter((p) => p && p.product).slice(0, 3)
-    : [];
-  if (products.length !== 3) throw new Error('推しドリンクのTOP3を1位から3位まで選択してください。');
-
-  const questions = payload.questionAnswers || {};
-  const nowDrink = String(questions.now || '').trim();
-  const hotDayDrink = String(questions.hotDay || questions.hot || '').trim();
-  if (!nowDrink || !hotDayDrink) throw new Error('「今飲みたいもの」と「今日が40度の暑い日だとして飲みたいもの」の両方に回答してください。');
+  const rankings = payload.questionRankings || {};
+  const nowRanking = normalizeRanking(rankings.now || payload.selectedProducts);
+  const hotRanking = normalizeRanking(rankings.hotDay || rankings.hot);
+  if (!nowRanking || !hotRanking) throw new Error('「今飲みたいもの」と「35度の暑い日なら？」の両方で、1位から3位まで選択してください。');
 
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const email = Session.getActiveUser().getEmail() || payload.email || 'anonymous';
 
-  appendResponseRow(ss, email, products, payload.freeText, nowDrink, hotDayDrink);
-  appendAggregateRows(ss, email, products, payload.freeText, nowDrink, hotDayDrink);
+  appendResponseRow(ss, email, nowRanking, hotRanking, payload.freeText);
+  appendAggregateRows(ss, email, nowRanking, hotRanking, payload.freeText);
 
   return { ok: true };
 }
 
-function appendResponseRow(ss, email, rankedProducts, freeText, nowDrink, hotDayDrink) {
+function normalizeRanking(list) {
+  const items = Array.isArray(list) ? list.filter((p) => p && p.product).slice(0, 3) : [];
+  if (items.length !== 3) return null;
+  return items;
+}
+
+function appendResponseRow(ss, email, nowRanking, hotRanking, freeText) {
   const sheet = ss.getSheetByName(RESPONSE_SHEET_NAME) || ss.insertSheet(RESPONSE_SHEET_NAME);
   if (sheet.getLastRow() === 0) {
     sheet.appendRow([
       'タイムスタンプ',
       'メールアドレス',
-      '1位カテゴリ',
-      '1位メーカー',
-      '1位商品名',
-      '1位価格',
-      '2位カテゴリ',
-      '2位メーカー',
-      '2位商品名',
-      '2位価格',
-      '3位カテゴリ',
-      '3位メーカー',
-      '3位商品名',
-      '3位価格',
+      '今-1位カテゴリ',
+      '今-1位メーカー',
+      '今-1位商品名',
+      '今-1位価格',
+      '今-2位カテゴリ',
+      '今-2位メーカー',
+      '今-2位商品名',
+      '今-2位価格',
+      '今-3位カテゴリ',
+      '今-3位メーカー',
+      '今-3位商品名',
+      '今-3位価格',
+      '35度-1位カテゴリ',
+      '35度-1位メーカー',
+      '35度-1位商品名',
+      '35度-1位価格',
+      '35度-2位カテゴリ',
+      '35度-2位メーカー',
+      '35度-2位商品名',
+      '35度-2位価格',
+      '35度-3位カテゴリ',
+      '35度-3位メーカー',
+      '35度-3位商品名',
+      '35度-3位価格',
       '自由記入',
-      '今飲みたいもの',
-      '今日が40度の暑い日だとして、飲みたいもの',
     ]);
   }
 
@@ -103,21 +114,23 @@ function appendResponseRow(ss, email, rankedProducts, freeText, nowDrink, hotDay
   sheet.appendRow([
     new Date(),
     email,
-    ...buildProductCells(rankedProducts[0]),
-    ...buildProductCells(rankedProducts[1]),
-    ...buildProductCells(rankedProducts[2]),
+    ...buildProductCells(nowRanking[0]),
+    ...buildProductCells(nowRanking[1]),
+    ...buildProductCells(nowRanking[2]),
+    ...buildProductCells(hotRanking[0]),
+    ...buildProductCells(hotRanking[1]),
+    ...buildProductCells(hotRanking[2]),
     freeText || '',
-    nowDrink || '',
-    hotDayDrink || '',
   ]);
 }
 
-function appendAggregateRows(ss, email, rankedProducts, freeText, nowDrink, hotDayDrink) {
+function appendAggregateRows(ss, email, nowRanking, hotRanking, freeText) {
   const sheet = ss.getSheetByName(AGGREGATE_SHEET_NAME) || ss.insertSheet(AGGREGATE_SHEET_NAME);
   if (sheet.getLastRow() === 0) {
     sheet.appendRow([
       'タイムスタンプ',
       'メールアドレス',
+      'シナリオ',
       '順位',
       'ポイント',
       'カテゴリ',
@@ -125,32 +138,36 @@ function appendAggregateRows(ss, email, rankedProducts, freeText, nowDrink, hotD
       '商品名',
       '価格',
       '自由記入',
-      '今飲みたいもの',
-      '今日が40度の暑い日だとして、飲みたいもの',
     ]);
   }
 
-  rankedProducts.forEach((product, idx) => {
-    sheet.appendRow([
-      new Date(),
-      email,
-      `${idx + 1}位`,
-      RANK_POINTS[idx] || 0,
-      (product && product.category) || '',
-      (product && product.maker) || '',
-      (product && product.product) || '',
-      (product && product.price) || '',
-      idx === 0 ? freeText || '' : '',
-      idx === 0 ? nowDrink || '' : '',
-      idx === 0 ? hotDayDrink || '' : '',
-    ]);
+  const scenarios = [
+    { label: '今飲みたいもの', items: nowRanking },
+    { label: '35度の暑い日なら？', items: hotRanking },
+  ];
+
+  scenarios.forEach((scenario, scenarioIdx) => {
+    scenario.items.forEach((product, idx) => {
+      sheet.appendRow([
+        new Date(),
+        email,
+        scenario.label,
+        `${idx + 1}位`,
+        RANK_POINTS[idx] || 0,
+        (product && product.category) || '',
+        (product && product.maker) || '',
+        (product && product.product) || '',
+        (product && product.price) || '',
+        scenarioIdx === 0 && idx === 0 ? freeText || '' : '',
+      ]);
+    });
   });
 
   refreshPointSummary(sheet);
 }
 
 function refreshPointSummary(sheet) {
-  const DATA_COLUMNS = 9;
+  const DATA_COLUMNS = 10;
   const SUMMARY_START_COL = 11; // Column K
   const SUMMARY_TITLE_CELL = sheet.getRange(1, SUMMARY_START_COL);
   const SUMMARY_START_ROW = 2;
@@ -171,11 +188,11 @@ function refreshPointSummary(sheet) {
   data.forEach((row) => {
     const timestamp = row[0];
     if (!timestamp) return;
-    const points = Number(row[3]) || 0;
-    const category = row[4] || '';
-    const maker = row[5] || '';
-    const product = row[6] || '';
-    const price = row[7] || '';
+    const points = Number(row[4]) || 0;
+    const category = row[5] || '';
+    const maker = row[6] || '';
+    const product = row[7] || '';
+    const price = row[8] || '';
     const key = [category, maker, product, price].join('||');
 
     if (!summaryMap[key]) {
@@ -205,7 +222,7 @@ function getRankingSummary() {
   if (!sheet) return { products: [], makerLeader: null };
 
   const lastRow = sheet.getLastRow();
-  const DATA_COLUMNS = 9;
+  const DATA_COLUMNS = 10;
   if (lastRow <= 1) return { products: [], makerLeader: null };
 
   const rows = sheet.getRange(2, 1, lastRow - 1, DATA_COLUMNS).getValues();
@@ -223,11 +240,11 @@ function buildRankingMaps(rows) {
   rows.forEach((row) => {
     const timestamp = row[0];
     if (!timestamp) return;
-    const points = Number(row[3]) || 0;
-    const category = row[4] || '';
-    const maker = row[5] || '';
-    const product = row[6] || '';
-    const price = row[7] || '';
+    const points = Number(row[4]) || 0;
+    const category = row[5] || '';
+    const maker = row[6] || '';
+    const product = row[7] || '';
+    const price = row[8] || '';
     const productKey = [category, maker, product, price].join('||');
     const makerKey = normalizeProductKey(maker) || 'メーカー不明';
 
