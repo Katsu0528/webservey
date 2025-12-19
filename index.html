@@ -245,8 +245,33 @@
       .selection-layout {
         display: grid;
         grid-template-columns: 2.2fr 1fr;
+        grid-template-rows: auto 1fr;
         gap: 16px;
         align-items: start;
+      }
+
+      .scenario-switcher {
+        grid-column: 1 / -1;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px;
+        background: linear-gradient(120deg, rgba(255, 126, 182, 0.06), rgba(108, 140, 255, 0.08));
+        box-shadow: var(--shadow);
+      }
+
+      .scenario-switcher-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .scenario-switcher .section-lead {
+        margin: 0;
       }
 
       .vending-area {
@@ -381,7 +406,7 @@
       .card .price {
         font-size: 16px;
         font-weight: 800;
-        color: var(--accent);
+        color: #0b2b70;
       }
 
       .card .meta,
@@ -558,6 +583,16 @@
         box-shadow: 0 10px 20px rgba(255, 126, 182, 0.35);
       }
 
+      .question-tab.hot {
+        color: #d6266f;
+      }
+
+      .question-tab.hot.active {
+        background: linear-gradient(120deg, #ff6f91, #d6266f);
+        color: #fff;
+        box-shadow: 0 10px 24px rgba(214, 38, 111, 0.35);
+      }
+
       .question-panels {
         margin-top: 12px;
       }
@@ -569,6 +604,25 @@
 
       .question-panel.active {
         display: block;
+      }
+
+      .scenario-banner {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        padding: 10px 14px;
+        border-radius: 12px;
+        background: rgba(31, 36, 48, 0.8);
+        color: #fff;
+        font-weight: 800;
+        font-size: 18px;
+        letter-spacing: 0.02em;
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18);
+        z-index: 2;
+      }
+
+      .scenario-banner.hot {
+        background: rgba(214, 38, 111, 0.9);
       }
 
       .required-hint {
@@ -601,7 +655,7 @@
 
       .ranking-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
         gap: 14px;
         margin-top: 14px;
       }
@@ -620,7 +674,7 @@
 
       .ranking-card .media-frame {
         aspect-ratio: 3 / 4;
-        min-height: 200px;
+        min-height: 240px;
       }
 
       .ranking-rank {
@@ -673,6 +727,20 @@
         display: none;
       }
 
+      .ranking-layout {
+        display: grid;
+        grid-template-columns: minmax(280px, 1fr) 1.2fr;
+        gap: 16px;
+        align-items: start;
+        margin-top: 14px;
+      }
+
+      .ranking-results {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
       .maker-highlight.visible {
         display: block;
       }
@@ -714,6 +782,9 @@
         .selection-layout {
           grid-template-columns: 1fr;
         }
+        .ranking-layout {
+          grid-template-columns: 1fr;
+        }
         h1 {
           font-size: 24px;
         }
@@ -746,7 +817,7 @@
               <p class="eyebrow">STEP 1</p>
               <h2>☕ あなたの推しドリンクTOP3を教えて!</h2>
               <p class="section-lead">
-                今飲みたいもの」「35度の暑い日なら？」の2つで、好きなドリンク画像を右の「1位〜3位」枠へドラッグ&ドロップしてください。
+                今飲みたいもの」「35度以上の暑い日なら？」の2つで、好きなドリンク画像を右の「1位〜3位」枠へドラッグ&ドロップしてください。
                 <br />1位→3pt / 2位→2pt / 3位→1ptで集計されます。
               </p>
             </div>
@@ -755,27 +826,39 @@
           <div class="question-block">
             <p class="eyebrow">質問1</p>
             <h3>💬 タブを切り替えて各シーンの1位〜3位を選んでください</h3>
-            <p class="section-lead">「今飲みたいもの」「35度の暑い日なら？」の2つをそれぞれドラッグ&ドロップで3つ埋めてください。</p>
-            <div class="question-tabs" id="question-tabs">
-              <button class="question-tab active" data-key="now">今飲みたいもの</button>
-              <button class="question-tab" data-key="hotDay">35度の暑い日なら？</button>
-            </div>
-            <div class="question-panels" id="question-panels">
-              <div class="question-panel active" data-key="now">
-                <p class="required-hint">* 「今飲みたいもの」を1位〜3位まで選んでください。</p>
-                <ul class="question-hints">
-                  <li>商品画像を右の「1位〜3位」枠へドラッグ&ドロップ。</li>
-                </ul>
-              </div>
-              <div class="question-panel" data-key="hotDay">
-                <p class="required-hint">* 「35度の暑い日なら？」を1位〜3位まで選んでください。</p>
-              </div>
-            </div>
+            <p class="section-lead">上部のタブで「今飲みたいもの」「35度以上の暑い日なら？」を切り替えて、各シーンで3つずつ埋めてください。</p>
           </div>
           <div class="selection-layout">
+            <div class="scenario-switcher">
+              <div class="scenario-switcher-header">
+                <div>
+                  <p class="eyebrow">シーン切り替え</p>
+                  <p class="section-lead">順位ウィンドウの上でシーンを切り替えられます。</p>
+                </div>
+                <div class="question-tabs" id="question-tabs">
+                  <button class="question-tab active" data-key="now">今飲みたいもの</button>
+                  <button class="question-tab hot" data-key="hotDay">35度以上の暑い日なら？</button>
+                </div>
+              </div>
+              <div class="question-panels" id="question-panels">
+                <div class="question-panel active" data-key="now">
+                  <p class="required-hint">* 「今飲みたいもの」を1位〜3位まで選んでください。</p>
+                  <ul class="question-hints">
+                    <li>商品画像を右の「1位〜3位」枠へドラッグ&ドロップ。</li>
+                  </ul>
+                </div>
+                <div class="question-panel" data-key="hotDay">
+                  <p class="required-hint">* 「35度以上の暑い日なら？」を1位〜3位まで選んでください。</p>
+                  <ul class="question-hints">
+                    <li>真夏のシーンで飲みたいものを3つ選んでください。</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
             <div class="vending-area">
               <div class="category-tabs" id="category-tabs"></div>
               <div class="vending-window">
+                <div id="scenario-banner" class="scenario-banner"></div>
                 <div id="product-grid" class="card-grid"></div>
               </div>
             </div>
@@ -808,28 +891,32 @@
           </div>
           <button class="close-tab-btn" id="close-tab-btn">この画面を閉じる</button>
         </div>
-        <div class="maker-highlight" id="maker-highlight">
-          <div class="maker-highlight-header">
-            <span class="pill accent">このままいくと…</span>
-            <div>
-              <p class="maker-highlight-meta" id="maker-highlight-meta"></p>
-              <h3 class="maker-highlight-title" id="maker-highlight-title"></h3>
+        <div class="ranking-layout">
+          <div class="maker-highlight" id="maker-highlight">
+            <div class="maker-highlight-header">
+              <span class="pill accent">このままいくと…</span>
+              <div>
+                <p class="maker-highlight-meta" id="maker-highlight-meta"></p>
+                <h3 class="maker-highlight-title" id="maker-highlight-title"></h3>
+              </div>
+            </div>
+            <div class="maker-highlight-body">
+              <div id="maker-highlight-image"></div>
+              <p class="section-lead" id="maker-highlight-description"></p>
             </div>
           </div>
-          <div class="maker-highlight-body">
-            <div id="maker-highlight-image"></div>
-            <p class="section-lead" id="maker-highlight-description"></p>
+          <div class="ranking-results">
+            <div class="status" id="ranking-status">最新の順位を読み込んでいます...</div>
+            <div id="ranking-list" class="ranking-grid"></div>
           </div>
         </div>
-        <div class="status" id="ranking-status">最新の順位を読み込んでいます...</div>
-        <div id="ranking-list" class="ranking-grid"></div>
       </section>
     </div>
 
       <script>
       const QUESTION_KEYS = [
         { key: 'now', label: '今飲みたいもの' },
-        { key: 'hotDay', label: '35度の暑い日なら？' },
+        { key: 'hotDay', label: '35度以上の暑い日なら？' },
       ];
 
       const state = {
@@ -870,6 +957,7 @@
         makerHighlightDescription: document.getElementById('maker-highlight-description'),
         questionTabs: document.getElementById('question-tabs'),
         questionPanels: document.getElementById('question-panels'),
+        scenarioBanner: document.getElementById('scenario-banner'),
         freeText: document.getElementById('free-text'),
       };
 
@@ -912,8 +1000,16 @@
             panel.classList.toggle('active', panel.dataset.key === key);
           });
         }
+        updateScenarioBanner();
         updateProductSelections();
         renderRankList();
+      }
+
+      function updateScenarioBanner() {
+        if (!els.scenarioBanner) return;
+        const active = QUESTION_KEYS.find((item) => item.key === state.activeQuestion);
+        els.scenarioBanner.textContent = active?.label || '';
+        els.scenarioBanner.classList.toggle('hot', state.activeQuestion === 'hotDay');
       }
 
       function createImageElement(src, alt) {
@@ -1209,7 +1305,7 @@
 
         const validations = [
           { key: 'now', label: '「今飲みたいもの」' },
-          { key: 'hotDay', label: '「35度の暑い日なら？」' },
+          { key: 'hotDay', label: '「35度以上の暑い日なら？」' },
         ];
         for (const item of validations) {
           const selection = getSelection(item.key);
