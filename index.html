@@ -709,6 +709,16 @@
       };
       const FALLBACK_IMAGE =
         'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="360" height="240" viewBox="0 0 360 240"><rect width="360" height="240" fill="%23f2f4f7"/><rect x="30" y="30" width="300" height="180" rx="12" fill="none" stroke="%23c3cad4" stroke-width="8"/><path d="M96 166l48-58 48 58 48-72 24 32" fill="none" stroke="%23c3cad4" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><circle cx="138" cy="90" r="22" fill="%23d8dde5"/></svg>';
+      const IMAGE_SIZES = {
+        card: 320,
+        thumb: 96,
+        ranking: 128,
+      };
+      const IMAGE_DIMENSIONS = {
+        card: { width: 240, height: 320 },
+        thumb: { width: 60, height: 60 },
+        ranking: { width: 64, height: 64 },
+      };
       const RANK_POINTS = [4, 2, 1];
 
       const els = {
@@ -749,14 +759,25 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
-      function createImageElement(src, alt) {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'media-frame';
+      function getOptimizedImageUrl(src, size) {
+        if (!src) return '';
+        const raw = String(src);
+        if (raw.startsWith('data:')) return raw;
+        if (!size) return raw;
+        if (!raw.includes('googleusercontent.com')) return raw;
+        if (/=w\d+/i.test(raw) || /=s\d+/i.test(raw)) return raw;
+        return `${raw}=w${size}`;
+      }
 
-        const img = document.createElement('img');
-        img.loading = 'lazy';
+      function configureImage(img, options = {}) {
+        const { src, alt, size, width, height, fetchPriority, loading } = options;
+        img.loading = loading || 'lazy';
+        img.decoding = 'async';
         img.alt = alt || 'image preview';
         img.referrerPolicy = 'no-referrer';
+        if (fetchPriority) img.fetchPriority = fetchPriority;
+        if (width) img.width = width;
+        if (height) img.height = height;
 
         const applyFallback = () => {
           img.onerror = null;
@@ -764,7 +785,15 @@
         };
 
         img.onerror = applyFallback;
-        img.src = src || FALLBACK_IMAGE;
+        img.src = getOptimizedImageUrl(src, size) || FALLBACK_IMAGE;
+      }
+
+      function createImageElement(src, alt, options = {}) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'media-frame';
+
+        const img = document.createElement('img');
+        configureImage(img, { src, alt, ...options });
 
         wrapper.appendChild(img);
         return wrapper;
@@ -889,13 +918,21 @@
         }
 
         els.productGrid.dataset.category = category.name;
-        category.items.forEach((item) => {
+        category.items.forEach((item, idx) => {
           const card = document.createElement('div');
           card.className = 'card product-card';
           card.dataset.category = item.category;
           card.dataset.product = item.product;
 
-          const img = createImageElement(item.imageUrl, item.product);
+          const priority = idx < 6 ? 'high' : 'low';
+          const loading = idx < 6 ? 'eager' : 'lazy';
+          const img = createImageElement(item.imageUrl, item.product, {
+            size: IMAGE_SIZES.card,
+            width: IMAGE_DIMENSIONS.card.width,
+            height: IMAGE_DIMENSIONS.card.height,
+            fetchPriority: priority,
+            loading,
+          });
           const badge = document.createElement('span');
           badge.className = 'badge';
           badge.textContent = item.category;
@@ -995,14 +1032,14 @@
           const thumb = document.createElement('div');
           thumb.className = 'rank-thumb';
           const thumbImg = document.createElement('img');
-          thumbImg.loading = 'lazy';
-          thumbImg.alt = item?.product || '選択なし';
-          thumbImg.referrerPolicy = 'no-referrer';
-          thumbImg.src = item?.imageUrl || FALLBACK_IMAGE;
-          thumbImg.onerror = () => {
-            thumbImg.onerror = null;
-            thumbImg.src = FALLBACK_IMAGE;
-          };
+          configureImage(thumbImg, {
+            src: item?.imageUrl,
+            alt: item?.product || '選択なし',
+            size: IMAGE_SIZES.thumb,
+            width: IMAGE_DIMENSIONS.thumb.width,
+            height: IMAGE_DIMENSIONS.thumb.height,
+            fetchPriority: 'low',
+          });
           thumb.appendChild(thumbImg);
 
           const content = document.createElement('div');
@@ -1109,14 +1146,14 @@
           const imageWrapper = document.createElement('div');
           imageWrapper.className = 'ranking-image';
           const img = document.createElement('img');
-          img.loading = 'lazy';
-          img.alt = item?.product || '商品画像';
-          img.referrerPolicy = 'no-referrer';
-          img.src = item?.imageUrl || FALLBACK_IMAGE;
-          img.onerror = () => {
-            img.onerror = null;
-            img.src = FALLBACK_IMAGE;
-          };
+          configureImage(img, {
+            src: item?.imageUrl,
+            alt: item?.product || '商品画像',
+            size: IMAGE_SIZES.ranking,
+            width: IMAGE_DIMENSIONS.ranking.width,
+            height: IMAGE_DIMENSIONS.ranking.height,
+            fetchPriority: 'low',
+          });
           imageWrapper.appendChild(img);
           imageCell.appendChild(imageWrapper);
 
