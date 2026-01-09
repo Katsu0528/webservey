@@ -245,33 +245,8 @@
       .selection-layout {
         display: grid;
         grid-template-columns: 2.2fr 1fr;
-        grid-template-rows: auto 1fr;
         gap: 16px;
         align-items: start;
-      }
-
-      .scenario-switcher {
-        grid-column: 1 / -1;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        padding: 12px;
-        background: linear-gradient(120deg, rgba(255, 126, 182, 0.06), rgba(108, 140, 255, 0.08));
-        box-shadow: var(--shadow);
-      }
-
-      .scenario-switcher-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
-
-      .scenario-switcher .section-lead {
-        margin: 0;
       }
 
       .vending-area {
@@ -543,104 +518,6 @@
         display: block;
       }
 
-      .question-block {
-        margin: 12px 0 16px;
-        padding: 12px;
-        border: 1px dashed #ffd7eb;
-        background: linear-gradient(120deg, rgba(255, 126, 182, 0.06), rgba(108, 140, 255, 0.06));
-        border-radius: 14px;
-      }
-
-      .question-block .section-lead {
-        margin-bottom: 10px;
-      }
-
-      .question-tabs {
-        display: inline-flex;
-        gap: 10px;
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 4px;
-        background: #f8f9ff;
-        box-shadow: var(--shadow);
-        flex-wrap: wrap;
-      }
-
-      .question-tab {
-        border: none;
-        background: transparent;
-        padding: 10px 14px;
-        border-radius: 10px;
-        cursor: pointer;
-        font-weight: 700;
-        color: #3a3f52;
-        transition: 0.15s;
-      }
-
-      .question-tab.active {
-        background: linear-gradient(120deg, var(--accent), var(--accent-2));
-        color: #fff;
-        box-shadow: 0 10px 20px rgba(255, 126, 182, 0.35);
-      }
-
-      .question-tab.hot {
-        color: #d6266f;
-      }
-
-      .question-tab.hot.active {
-        background: linear-gradient(120deg, #ff6f91, #d6266f);
-        color: #fff;
-        box-shadow: 0 10px 24px rgba(214, 38, 111, 0.35);
-      }
-
-      .question-panels {
-        margin-top: 12px;
-      }
-
-      .question-panel {
-        display: none;
-        margin-top: 10px;
-      }
-
-      .question-panel.active {
-        display: block;
-      }
-
-      .scenario-banner {
-        position: absolute;
-        top: 12px;
-        left: 12px;
-        padding: 10px 14px;
-        border-radius: 12px;
-        background: rgba(31, 36, 48, 0.8);
-        color: #fff;
-        font-weight: 800;
-        font-size: 18px;
-        letter-spacing: 0.02em;
-        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18);
-        z-index: 2;
-      }
-
-      .scenario-banner.hot {
-        background: rgba(214, 38, 111, 0.9);
-      }
-
-      .required-hint {
-        margin: 0 0 6px;
-        color: #c22463;
-        font-weight: 700;
-        font-size: 13px;
-      }
-
-      .question-hints {
-        margin: 0;
-        padding-left: 18px;
-        color: #3a3f52;
-        display: grid;
-        gap: 6px;
-        font-size: 14px;
-      }
-
       .ranking-view {
         margin-top: 16px;
       }
@@ -653,60 +530,6 @@
         flex-wrap: wrap;
       }
 
-      .ranking-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 14px;
-        margin-top: 14px;
-      }
-
-      .ranking-card {
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        padding: 12px;
-        background: linear-gradient(180deg, #ffffff 0%, #f8f9ff 50%, #eef1ff 100%);
-        box-shadow: var(--shadow);
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        position: relative;
-      }
-
-      .ranking-card .media-frame {
-        aspect-ratio: 3 / 4;
-        min-height: 240px;
-      }
-
-      .ranking-rank {
-        font-weight: 800;
-        color: #fff;
-        background: linear-gradient(120deg, var(--accent), var(--accent-2));
-        padding: 6px 12px;
-        border-radius: 12px;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        box-shadow: 0 12px 24px rgba(255, 126, 182, 0.35);
-        width: fit-content;
-      }
-
-      .ranking-rank .pts {
-        background: rgba(255, 255, 255, 0.88);
-        padding: 4px 10px;
-        border-radius: 10px;
-        color: #1f2430;
-      }
-
-      .ranking-meta {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        flex-wrap: wrap;
-        color: #4a5066;
-        font-size: 14px;
-      }
-
       .close-tab-btn {
         background: #1f1f1f;
         color: #fff;
@@ -716,16 +539,6 @@
         font-size: 14px;
         cursor: pointer;
         box-shadow: 0 12px 22px rgba(0, 0, 0, 0.18);
-      }
-
-      .maker-highlight {
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        padding: 14px;
-        background: linear-gradient(120deg, rgba(255, 126, 182, 0.06), rgba(108, 140, 255, 0.08));
-        box-shadow: var(--shadow);
-        margin-top: 12px;
-        display: none;
       }
 
       .ranking-layout {
@@ -742,84 +555,51 @@
         gap: 12px;
       }
 
-      .ranking-columns {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 14px;
-        margin-top: 6px;
-      }
-
-      .ranking-column {
-        border: 1px solid var(--border);
+      .ranking-table-wrapper {
+        overflow-x: auto;
         border-radius: 14px;
-        padding: 12px;
-        background: #fff;
+        border: 1px solid var(--border);
         box-shadow: var(--shadow);
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
+        background: #fff;
       }
 
-      .ranking-column-header {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
+      .ranking-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 560px;
       }
 
-      .ranking-column h3 {
-        margin: 0;
-        font-size: 16px;
+      .ranking-table th,
+      .ranking-table td {
+        padding: 12px;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+        font-size: 14px;
       }
 
-      .ranking-stack {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
+      .ranking-table th {
+        background: #f8f9ff;
+        font-weight: 700;
       }
 
-      .ranking-card.compact .media-frame {
-        min-height: 160px;
+      .ranking-table tbody tr:hover {
+        background: #fdf3ff;
       }
 
-      .ranking-card.compact .ranking-rank {
-        width: fit-content;
+      .ranking-image {
+        width: 64px;
+        height: 64px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: #f8f9ff;
+        overflow: hidden;
       }
 
-      .maker-highlight.visible {
+      .ranking-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
         display: block;
-      }
-
-      .maker-highlight-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
-
-      .maker-highlight-body {
-        display: grid;
-        grid-template-columns: 1.2fr 1fr;
-        gap: 12px;
-        align-items: center;
-        margin-top: 10px;
-      }
-
-      .maker-highlight .media-frame {
-        aspect-ratio: 4 / 3;
-        min-height: 160px;
-      }
-
-      .maker-highlight-title {
-        margin: 2px 0 4px;
-        font-size: 18px;
-        letter-spacing: 0.02em;
-      }
-
-      .maker-highlight-meta {
-        margin: 0;
-        color: #4a5066;
-        font-weight: 600;
       }
 
       @media (max-width: 600px) {
@@ -832,9 +612,9 @@
         .media-frame {
           min-height: 180px;
         }
-        .maker-highlight-body {
-          grid-template-columns: 1fr;
-        }
+      .ranking-table {
+        min-width: 100%;
+      }
       }
     </style>
   </head>
@@ -858,48 +638,16 @@
               <p class="eyebrow">STEP 1</p>
               <h2>☕ あなたの推しドリンクTOP3を教えて!</h2>
               <p class="section-lead">
-                今飲みたいもの」「35度以上の暑い日なら？」の2つで、好きなドリンク画像を右の「1位〜3位」枠へドラッグ&ドロップしてください。
-                <br />1位→3pt / 2位→2pt / 3位→1ptで集計されます。
+                好きなドリンク画像を右の「1位〜3位」枠へドラッグ&ドロップしてください。
+                <br />1位→4pt / 2位→2pt / 3位→1ptで集計されます。
               </p>
             </div>
             <div class="counter" id="product-count">0/3</div>
           </div>
-          <div class="question-block">
-            <p class="eyebrow">質問1</p>
-            <h3>💬 タブを切り替えて各シーンの1位〜3位を選んでください</h3>
-            <p class="section-lead">上部のタブで「今飲みたいもの」「35度以上の暑い日なら？」を切り替えて、各シーンで3つずつ埋めてください。</p>
-          </div>
           <div class="selection-layout">
-            <div class="scenario-switcher">
-              <div class="scenario-switcher-header">
-                <div>
-                  <p class="eyebrow">シーン切り替え</p>
-                  <p class="section-lead">順位ウィンドウの上でシーンを切り替えられます。</p>
-                </div>
-                <div class="question-tabs" id="question-tabs">
-                  <button class="question-tab active" data-key="now">今飲みたいもの</button>
-                  <button class="question-tab hot" data-key="hotDay">35度以上の暑い日なら？</button>
-                </div>
-              </div>
-              <div class="question-panels" id="question-panels">
-                <div class="question-panel active" data-key="now">
-                  <p class="required-hint">* 「今飲みたいもの」を1位〜3位まで選んでください。</p>
-                  <ul class="question-hints">
-                    <li>商品画像を右の「1位〜3位」枠へドラッグ&ドロップ。</li>
-                  </ul>
-                </div>
-                <div class="question-panel" data-key="hotDay">
-                  <p class="required-hint">* 「35度以上の暑い日なら？」を1位〜3位まで選んでください。</p>
-                  <ul class="question-hints">
-                    <li>真夏のシーンで飲みたいものを3つ選んでください。</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
             <div class="vending-area">
               <div class="category-tabs" id="category-tabs"></div>
               <div class="vending-window">
-                <div id="scenario-banner" class="scenario-banner"></div>
                 <div id="product-grid" class="card-grid"></div>
               </div>
             </div>
@@ -908,13 +656,6 @@
               <div class="rank-list" id="rank-list"></div>
             </aside>
           </div>
-        </section>
-
-        <section id="q2">
-          <p class="eyebrow">質問2</p>
-          <h2>📝 自由記入で要望をどうぞ</h2>
-          <p class="section-lead">絶対に置いてほしいものや価格帯など、自由にリクエストしてください。</p>
-          <textarea id="free-text" placeholder="例：果汁系ドリンクは絶対欲しい、カフェインレスの選択肢を増やしてほしい など"></textarea>
         </section>
 
         <div class="actions">
@@ -928,46 +669,37 @@
           <div>
             <p class="eyebrow">結果ページ</p>
             <h2>🏆 みんなの現在の順位</h2>
-            <p class="section-lead">最新のPt順で、上位5つの商品名とメーカーです。</p>
+            <p class="section-lead">最新のPt順で上位15件を表示しています。</p>
           </div>
           <button class="close-tab-btn" id="close-tab-btn">この画面を閉じる</button>
         </div>
         <div class="ranking-layout">
-          <div class="maker-highlight" id="maker-highlight">
-            <div class="maker-highlight-header">
-              <span class="pill accent">このままいくと…</span>
-              <div>
-                <p class="maker-highlight-meta" id="maker-highlight-meta"></p>
-                <h3 class="maker-highlight-title" id="maker-highlight-title"></h3>
-              </div>
-            </div>
-            <div class="maker-highlight-body">
-              <div id="maker-highlight-image"></div>
-              <p class="section-lead" id="maker-highlight-description"></p>
-            </div>
-          </div>
           <div class="ranking-results">
             <div class="status" id="ranking-status">最新の順位を読み込んでいます...</div>
-            <div id="ranking-list" class="ranking-grid ranking-columns"></div>
+            <div class="ranking-table-wrapper">
+              <table class="ranking-table">
+                <thead>
+                  <tr>
+                    <th>順位</th>
+                    <th>商品画像</th>
+                    <th>商品名</th>
+                    <th>価格</th>
+                    <th>Pt</th>
+                  </tr>
+                </thead>
+                <tbody id="ranking-list"></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </section>
     </div>
 
       <script>
-      const QUESTION_KEYS = [
-        { key: 'now', label: '今飲みたいもの' },
-        { key: 'hotDay', label: '35度以上の暑い日なら？' },
-      ];
-
       const state = {
         categories: [],
         selectedCategory: null,
-        selections: {
-          now: { selectedProducts: [null, null, null], activeRank: 0 },
-          hotDay: { selectedProducts: [null, null, null], activeRank: 0 },
-        },
-        activeQuestion: 'now',
+        selection: { selectedProducts: [null, null, null], activeRank: 0 },
         freeText: '',
       };
       const dragState = {
@@ -977,7 +709,7 @@
       };
       const FALLBACK_IMAGE =
         'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="360" height="240" viewBox="0 0 360 240"><rect width="360" height="240" fill="%23f2f4f7"/><rect x="30" y="30" width="300" height="180" rx="12" fill="none" stroke="%23c3cad4" stroke-width="8"/><path d="M96 166l48-58 48 58 48-72 24 32" fill="none" stroke="%23c3cad4" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><circle cx="138" cy="90" r="22" fill="%23d8dde5"/></svg>';
-      const RANK_POINTS = [3, 2, 1];
+      const RANK_POINTS = [4, 2, 1];
 
       const els = {
         tabs: document.getElementById('category-tabs'),
@@ -991,24 +723,12 @@
         rankingStatus: document.getElementById('ranking-status'),
         rankingList: document.getElementById('ranking-list'),
         closeTabBtn: document.getElementById('close-tab-btn'),
-        makerHighlight: document.getElementById('maker-highlight'),
-        makerHighlightMeta: document.getElementById('maker-highlight-meta'),
-        makerHighlightTitle: document.getElementById('maker-highlight-title'),
-        makerHighlightImage: document.getElementById('maker-highlight-image'),
-        makerHighlightDescription: document.getElementById('maker-highlight-description'),
-        questionTabs: document.getElementById('question-tabs'),
-        questionPanels: document.getElementById('question-panels'),
-        scenarioBanner: document.getElementById('scenario-banner'),
-        freeText: document.getElementById('free-text'),
       };
 
       const viewState = { current: 'form' };
 
-      function getSelection(key = state.activeQuestion) {
-        if (!state.selections[key]) {
-          state.selections[key] = { selectedProducts: [null, null, null], activeRank: 0 };
-        }
-        return state.selections[key];
+      function getSelection() {
+        return state.selection;
       }
 
       function setStatus(message, isError = false) {
@@ -1027,30 +747,6 @@
         els.formView.classList.toggle('active', target === 'form');
         els.rankingView.classList.toggle('active', target === 'ranking');
         window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-
-      function setActiveQuestionTab(key) {
-        state.activeQuestion = key;
-        if (els.questionTabs) {
-          els.questionTabs.querySelectorAll('.question-tab').forEach((tab) => {
-            tab.classList.toggle('active', tab.dataset.key === key);
-          });
-        }
-        if (els.questionPanels) {
-          els.questionPanels.querySelectorAll('.question-panel').forEach((panel) => {
-            panel.classList.toggle('active', panel.dataset.key === key);
-          });
-        }
-        updateScenarioBanner();
-        updateProductSelections();
-        renderRankList();
-      }
-
-      function updateScenarioBanner() {
-        if (!els.scenarioBanner) return;
-        const active = QUESTION_KEYS.find((item) => item.key === state.activeQuestion);
-        els.scenarioBanner.textContent = active?.label || '';
-        els.scenarioBanner.classList.toggle('hot', state.activeQuestion === 'hotDay');
       }
 
       function createImageElement(src, alt) {
@@ -1277,7 +973,7 @@
         if (!els.rankList) return;
         els.rankList.innerHTML = '';
 
-        const labels = ['1位 (3pt)', '2位 (2pt)', '3位 (1pt)'];
+        const labels = ['1位 (4pt)', '2位 (2pt)', '3位 (1pt)'];
         const selection = getSelection();
         selection.selectedProducts.forEach((item, idx) => {
           const row = document.createElement('div');
@@ -1343,39 +1039,24 @@
       function handleSubmit() {
         setStatus('');
         els.submit.disabled = true;
-
-        const validations = [
-          { key: 'now', label: '「今飲みたいもの」' },
-          { key: 'hotDay', label: '「35度以上の暑い日なら？」' },
-        ];
-        for (const item of validations) {
-          const selection = getSelection(item.key);
-          const filledProducts = selection.selectedProducts.filter(Boolean);
-          if (filledProducts.length !== 3) {
-            setStatus(`${item.label}のTOP3を3つ選んで、1位から3位まで順位をつけてください。`, true);
-            els.submit.disabled = false;
-            return;
-          }
+        const selection = getSelection();
+        const filledProducts = selection.selectedProducts.filter(Boolean);
+        if (filledProducts.length !== 3) {
+          setStatus('TOP3を3つ選んで、1位から3位まで順位をつけてください。', true);
+          els.submit.disabled = false;
+          return;
         }
 
         const payload = {
-          questionRankings: {
-            now: getCleanProducts(getSelection('now')),
-            hotDay: getCleanProducts(getSelection('hotDay')),
-          },
+          selectedProducts: getCleanProducts(selection),
           freeText: (state.freeText || '').trim(),
         };
 
         google.script.run
           .withSuccessHandler(() => {
             setStatus('ご回答ありがとうございました！みんなの推しTOP3を集計します。');
-            QUESTION_KEYS.forEach(({ key }) => {
-              state.selections[key] = { selectedProducts: [null, null, null], activeRank: 0 };
-            });
-            state.activeQuestion = 'now';
+            state.selection = { selectedProducts: [null, null, null], activeRank: 0 };
             state.freeText = '';
-            if (els.freeText) els.freeText.value = '';
-            setActiveQuestionTab('now');
             renderProducts();
             renderRankList();
             els.submit.disabled = false;
@@ -1397,8 +1078,7 @@
         google.script.run
           .withSuccessHandler((data) => {
             const rankings = normalizeRankingResponse(data);
-            renderMakerHighlight(rankings.leader);
-            const hasData = renderRankingColumns(rankings);
+            const hasData = renderRankingTable(rankings.products);
             setRankingStatus(hasData ? '' : 'まだ集計データがありません。最初の投票をお待ちしています。');
           })
           .withFailureHandler((err) => {
@@ -1408,157 +1088,56 @@
       }
 
       function normalizeRankingResponse(data) {
-        const rankings = data?.rankings || {};
-        const baseProducts = Array.isArray(data?.products) ? data.products : Array.isArray(data) ? data : [];
-        const now = Array.isArray(rankings.now) ? rankings.now : [];
-        const hotDay = Array.isArray(rankings.hotDay) ? rankings.hotDay : [];
-        const makers = Array.isArray(rankings.makers) ? rankings.makers : [];
-        const leader = (!Array.isArray(data) && data?.makerLeader) || makers[0] || null;
+        const products = Array.isArray(data?.products) ? data.products : Array.isArray(data) ? data : [];
 
         return {
-          now: now.length ? now : baseProducts,
-          hotDay: hotDay.length ? hotDay : baseProducts,
-          makers,
-          leader,
+          products,
         };
       }
 
-      function renderRankingColumns(rankings) {
+      function renderRankingTable(products) {
         els.rankingList.innerHTML = '';
-        const columns = [
-          { key: 'makers', title: 'メーカー順位', subtitle: '合計Pt順のTOP5', items: rankings?.makers || [], type: 'maker' },
-          { key: 'hotDay', title: '35度以上の暑い日なら？', subtitle: 'みんなのTOP5', items: rankings?.hotDay || [], type: 'product' },
-          { key: 'now', title: '今飲みたいもの', subtitle: 'みんなのTOP5', items: rankings?.now || [], type: 'product' },
-        ];
-        let hasData = false;
+        const items = Array.isArray(products) ? products.slice(0, 15) : [];
+        if (!items.length) return false;
 
-        columns.forEach((column) => {
-          const wrapper = document.createElement('div');
-          wrapper.className = 'ranking-column';
+        items.forEach((item, idx) => {
+          const row = document.createElement('tr');
+          const rank = document.createElement('td');
+          rank.textContent = `${idx + 1}位`;
 
-          const header = document.createElement('div');
-          header.className = 'ranking-column-header';
-          const title = document.createElement('h3');
-          title.textContent = column.title;
-          const subtitle = document.createElement('p');
-          subtitle.className = 'section-lead';
-          subtitle.textContent = column.subtitle;
-          header.appendChild(title);
-          header.appendChild(subtitle);
-          wrapper.appendChild(header);
+          const imageCell = document.createElement('td');
+          const imageWrapper = document.createElement('div');
+          imageWrapper.className = 'ranking-image';
+          const img = document.createElement('img');
+          img.loading = 'lazy';
+          img.alt = item?.product || '商品画像';
+          img.referrerPolicy = 'no-referrer';
+          img.src = item?.imageUrl || FALLBACK_IMAGE;
+          img.onerror = () => {
+            img.onerror = null;
+            img.src = FALLBACK_IMAGE;
+          };
+          imageWrapper.appendChild(img);
+          imageCell.appendChild(imageWrapper);
 
-          const stack = document.createElement('div');
-          stack.className = 'ranking-stack';
-          const items = Array.isArray(column.items) ? column.items.slice(0, 5) : [];
+          const name = document.createElement('td');
+          name.textContent = item?.product || '商品名不明';
 
-          if (!items.length) {
-            const empty = document.createElement('div');
-            empty.className = 'empty';
-            empty.textContent = 'まだデータがありません。';
-            stack.appendChild(empty);
-          } else {
-            hasData = true;
-            items.forEach((item, idx) => {
-              stack.appendChild(createRankingCard(item, idx, column.type));
-            });
-          }
+          const price = document.createElement('td');
+          price.textContent = item?.price || '-';
 
-          wrapper.appendChild(stack);
-          els.rankingList.appendChild(wrapper);
+          const points = document.createElement('td');
+          points.textContent = `${item?.points || 0} Pt`;
+
+          row.appendChild(rank);
+          row.appendChild(imageCell);
+          row.appendChild(name);
+          row.appendChild(price);
+          row.appendChild(points);
+          els.rankingList.appendChild(row);
         });
 
-        return hasData;
-      }
-
-      function createRankingCard(item, idx, type = 'product') {
-        const entry = item || {};
-        const card = document.createElement('div');
-        card.className = 'ranking-card compact';
-
-        const rank = document.createElement('div');
-        rank.className = 'ranking-rank';
-        rank.innerHTML = `<span>${idx + 1} 位</span><span class="pts">${entry.points || 0} Pt</span>`;
-        card.appendChild(rank);
-
-        if (type === 'maker') {
-          const img = createImageElement(entry.imageUrl || FALLBACK_IMAGE, entry.maker || 'メーカー');
-          const title = document.createElement('h4');
-          title.textContent = entry.maker || 'メーカー不明';
-          const meta = document.createElement('div');
-          meta.className = 'ranking-meta';
-          const votes = document.createElement('span');
-          votes.textContent = `${entry.count || 0} 票`;
-          const pts = document.createElement('span');
-          pts.textContent = 'メーカーPt集計';
-
-          meta.appendChild(pts);
-          meta.appendChild(votes);
-
-          const caption = document.createElement('div');
-          caption.className = 'muted';
-          caption.textContent = 'メーカー別の合計Ptです。';
-
-          card.appendChild(img);
-          card.appendChild(title);
-          card.appendChild(meta);
-          card.appendChild(caption);
-          return card;
-        }
-
-        const img = createImageElement(entry.imageUrl, entry.product);
-        const title = document.createElement('h4');
-        title.textContent = entry.product || '商品名不明';
-
-        const meta = document.createElement('div');
-        meta.className = 'ranking-meta';
-        const maker = document.createElement('span');
-        maker.textContent = entry.maker || 'メーカー不明';
-        const count = document.createElement('span');
-        count.textContent = `${entry.count || 0} 票`;
-        meta.appendChild(maker);
-        meta.appendChild(count);
-
-        const category = document.createElement('div');
-        category.className = 'muted';
-        const priceLabel = entry.price ? ` / ${entry.price}` : '';
-        category.textContent = `${entry.category || 'カテゴリ不明'}${priceLabel}`;
-
-        card.appendChild(img);
-        card.appendChild(title);
-        card.appendChild(meta);
-        card.appendChild(category);
-
-        return card;
-      }
-
-      function renderMakerHighlight(maker) {
-        if (!els.makerHighlight || !els.makerHighlightImage || !els.makerHighlightMeta || !els.makerHighlightTitle || !els.makerHighlightDescription) {
-          return;
-        }
-        els.makerHighlight.classList.remove('visible');
-        els.makerHighlightImage.innerHTML = '';
-        els.makerHighlightMeta.textContent = '';
-        els.makerHighlightTitle.textContent = '';
-        els.makerHighlightDescription.textContent = '';
-
-        if (!maker || (!maker.maker && !maker.imageUrl)) return;
-
-        const name = maker.maker || 'メーカー不明';
-        const points = Number(maker.points || 0);
-        const votes = Number(maker.count || 0);
-        const imageUrl = maker.imageUrl || '';
-
-        const metaParts = [];
-        if (points) metaParts.push(`合計 ${points} Pt`);
-        if (votes) metaParts.push(`${votes} 票`);
-
-        els.makerHighlightMeta.textContent = metaParts.join(' / ') || '集計中...';
-        els.makerHighlightTitle.textContent = `${name} がメーカーPt 1位！`;
-        els.makerHighlightDescription.textContent = `このままいくと… ${name} の自販機が選ばれそうです。`;
-
-        const image = createImageElement(imageUrl || FALLBACK_IMAGE, name);
-        els.makerHighlightImage.appendChild(image);
-        els.makerHighlight.classList.add('visible');
+        return true;
       }
 
       function getCleanProducts(selection) {
@@ -1570,19 +1149,7 @@
       }
 
       function setupInputs() {
-        if (els.questionTabs) {
-          els.questionTabs.querySelectorAll('.question-tab').forEach((tab) => {
-            tab.addEventListener('click', () => {
-              setActiveQuestionTab(tab.dataset.key || 'now');
-            });
-          });
-        }
-        setActiveQuestionTab(state.activeQuestion);
-        if (els.freeText) {
-          els.freeText.addEventListener('input', (event) => {
-            state.freeText = event.target.value;
-          });
-        }
+        return;
       }
 
       function closeTab() {
