@@ -16,13 +16,13 @@
         --subtext: #4b5563;
         --bg: #ffffff;
         --bg-soft: #fff7ed;
-        --shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+        --shadow: 0 8px 22px rgba(0, 0, 0, 0.06);
       }
 
       body {
         margin: 0;
         font-family: 'Noto Sans JP', system-ui, -apple-system, sans-serif;
-        background: linear-gradient(180deg, var(--bg-soft), var(--bg) 40%);
+        background: linear-gradient(180deg, var(--bg-soft), var(--bg) 45%);
         color: var(--text);
       }
 
@@ -49,10 +49,10 @@
       }
 
       header.hero {
-        background: #ffffff;
+        background: linear-gradient(180deg, rgba(47, 111, 237, 0.06), #ffffff 55%);
         border: 1px solid var(--border);
         border-radius: 16px;
-        padding: 18px 18px 16px;
+        padding: 18px;
         box-shadow: var(--shadow);
       }
 
@@ -83,7 +83,7 @@
         border-radius: 16px;
         padding: 18px 16px 20px;
         margin-top: 16px;
-        box-shadow: var(--shadow);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
       }
 
       .section-header {
@@ -92,6 +92,22 @@
         align-items: flex-start;
         gap: 12px;
         flex-wrap: wrap;
+      }
+
+      .section-header > div:first-child {
+        position: relative;
+        padding-left: 12px;
+      }
+
+      .section-header > div:first-child::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 6px;
+        bottom: 6px;
+        width: 3px;
+        border-radius: 999px;
+        background: linear-gradient(180deg, rgba(47, 111, 237, 0.8), rgba(47, 111, 237, 0.15));
       }
 
       .section-lead {
@@ -410,6 +426,23 @@
         border-color: #ffc0d7;
       }
 
+      #ranking-status {
+        display: none;
+      }
+
+      #ranking-status.visible {
+        display: block;
+      }
+
+      #ranking-status.status {
+        border: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 6px 0 0 !important;
+        color: var(--subtext) !important;
+        min-height: 0 !important;
+      }
+
       .badge {
         position: absolute;
         top: 10px;
@@ -546,20 +579,33 @@
         background: #fafaf9;
       }
 
-      .ranking-image {
-        width: 64px;
-        height: 64px;
-        border-radius: 12px;
+      .ranking-product {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .ranking-product-thumb {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
         border: 1px solid var(--border);
         background: var(--muted);
         overflow: hidden;
+        flex: 0 0 auto;
       }
 
-      .ranking-image img {
+      .ranking-product-thumb img {
         width: 100%;
         height: 100%;
         object-fit: contain;
         display: block;
+      }
+
+      .ranking-product-name {
+        font-weight: 600;
+        color: var(--text);
+        line-height: 1.35;
       }
 
       @media (max-width: 600px) {
@@ -588,7 +634,7 @@
           </div>
           <h1>自販機アンケート</h1>
           <p class="lead">
-            設置する飲み物の参考にしたいので、よかったら「気になる3つ」を選んでもらえると助かります。
+            設置する飲み物の参考にしたいので、「気になる3つ」を選んでアサヒにリクエストを送ります。
           </p>
         </header>
 
@@ -599,7 +645,7 @@
               <h2>気になる飲み物を3つ選択</h2>
               <p class="section-lead">
                 画像をタップして選べます。ドラッグ&ドロップでも並べ替えできます。
-                <br />1位→4pt / 2位→2pt / 3位→1ptで集計されます。
+                <br />1位4pt/2位2pt/3位1ptで集計されます。
               </p>
             </div>
             <div class="counter" id="product-count">0/3</div>
@@ -641,8 +687,7 @@
                 <thead>
                   <tr>
                     <th>順位</th>
-                    <th>商品画像</th>
-                    <th>商品名</th>
+                    <th>商品</th>
                     <th>価格</th>
                     <th>Pt</th>
                   </tr>
@@ -679,7 +724,7 @@
       const IMAGE_DIMENSIONS = {
         card: { width: 240, height: 320 },
         thumb: { width: 60, height: 60 },
-        ranking: { width: 64, height: 64 },
+        ranking: { width: 44, height: 44 },
       };
       const RANK_POINTS = [4, 2, 1];
 
@@ -728,8 +773,10 @@
 
       function setRankingStatus(message, isError = false) {
         if (!els.rankingStatus) return;
-        els.rankingStatus.textContent = message || '';
+        const text = (message || '').trim();
+        els.rankingStatus.textContent = text;
         els.rankingStatus.classList.toggle('error', Boolean(isError));
+        els.rankingStatus.classList.toggle('visible', Boolean(text));
       }
 
       function switchView(target) {
@@ -1124,9 +1171,12 @@
           const rank = document.createElement('td');
           rank.textContent = `${idx + 1}位`;
 
-          const imageCell = document.createElement('td');
-          const imageWrapper = document.createElement('div');
-          imageWrapper.className = 'ranking-image';
+          const productCell = document.createElement('td');
+          const wrap = document.createElement('div');
+          wrap.className = 'ranking-product';
+
+          const thumb = document.createElement('div');
+          thumb.className = 'ranking-product-thumb';
           const img = document.createElement('img');
           const resolvedSrc =
             item?.imageUrl || productImageMap.get(String(item?.product || '').trim()) || FALLBACK_IMAGE;
@@ -1146,11 +1196,15 @@
             fetchPriority: 'low',
             loading: 'eager',
           });
-          imageWrapper.appendChild(img);
-          imageCell.appendChild(imageWrapper);
+          thumb.appendChild(img);
 
-          const name = document.createElement('td');
-          name.textContent = item?.product || '商品名不明';
+          const nameWrap = document.createElement('div');
+          nameWrap.className = 'ranking-product-name';
+          nameWrap.textContent = item?.product || '商品名不明';
+
+          wrap.appendChild(thumb);
+          wrap.appendChild(nameWrap);
+          productCell.appendChild(wrap);
 
           const price = document.createElement('td');
           price.textContent = item?.price || '-';
@@ -1159,8 +1213,7 @@
           points.textContent = `${item?.points || 0} Pt`;
 
           row.appendChild(rank);
-          row.appendChild(imageCell);
-          row.appendChild(name);
+          row.appendChild(productCell);
           row.appendChild(price);
           row.appendChild(points);
           els.rankingList.appendChild(row);
