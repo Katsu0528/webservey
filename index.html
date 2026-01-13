@@ -579,6 +579,26 @@
         background: #fafaf9;
       }
 
+      .ranking-table tr.rank-top td {
+        font-size: 15px;
+        padding: 14px;
+      }
+
+      .ranking-table tr.rank-top td:first-child {
+        font-weight: 700;
+        color: var(--accent-2);
+      }
+
+      .ranking-table tr.rank-top .ranking-product-thumb {
+        width: 56px;
+        height: 56px;
+      }
+
+      .ranking-table tr.rank-top .ranking-product-name {
+        font-size: 15px;
+        font-weight: 700;
+      }
+
       .ranking-product {
         display: flex;
         align-items: center;
@@ -1168,6 +1188,9 @@
 
         items.forEach((item, idx) => {
           const row = document.createElement('tr');
+          if (idx < 3) {
+            row.classList.add('rank-top');
+          }
           const rank = document.createElement('td');
           rank.textContent = `${idx + 1}位`;
 
