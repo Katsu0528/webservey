@@ -702,6 +702,8 @@
         selection: { selectedProducts: [null, null, null], activeRank: 0 },
         freeText: '',
       };
+      const DEBUG = false;
+      const productImageMap = new Map();
       const dragState = {
         source: null,
         product: null,
@@ -737,6 +739,24 @@
 
       const viewState = { current: 'form' };
 
+      function buildProductImageMap() {
+        productImageMap.clear();
+        (state.categories || []).forEach((category) => {
+          (category.items || []).forEach((item) => {
+            const key = String(item.product || '').trim();
+            if (key && item.imageUrl) {
+              productImageMap.set(key, item.imageUrl);
+            }
+          });
+        });
+      }
+
+      function normalizeUrl(u) {
+        return String(u || '')
+          .replace(/&amp;/g, '&')
+          .trim();
+      }
+
       function getSelection() {
         return state.selection;
       }
@@ -760,8 +780,8 @@
       }
 
       function getOptimizedImageUrl(src, size) {
-        if (!src) return '';
-        const raw = String(src);
+        const raw = normalizeUrl(src);
+        if (!raw) return '';
         if (raw.startsWith('data:')) return raw;
         if (!size) return raw;
         if (!raw.includes('googleusercontent.com')) return raw;
@@ -1114,7 +1134,9 @@
 
         google.script.run
           .withSuccessHandler((data) => {
+            if (DEBUG) console.log('getRankingSummary raw:', data);
             const rankings = normalizeRankingResponse(data);
+            if (DEBUG) console.log('normalized products:', rankings.products);
             const hasData = renderRankingTable(rankings.products);
             setRankingStatus(hasData ? '' : 'まだ集計データがありません。最初の投票をお待ちしています。');
           })
@@ -1146,13 +1168,23 @@
           const imageWrapper = document.createElement('div');
           imageWrapper.className = 'ranking-image';
           const img = document.createElement('img');
+          const resolvedSrc =
+            item?.imageUrl || productImageMap.get(String(item?.product || '').trim()) || FALLBACK_IMAGE;
+          if (DEBUG) {
+            console.log('ranking image resolve', {
+              product: item?.product,
+              imageUrl: item?.imageUrl,
+              resolvedSrc,
+            });
+          }
           configureImage(img, {
-            src: item?.imageUrl,
+            src: resolvedSrc,
             alt: item?.product || '商品画像',
             size: IMAGE_SIZES.ranking,
             width: IMAGE_DIMENSIONS.ranking.width,
             height: IMAGE_DIMENSIONS.ranking.height,
             fetchPriority: 'low',
+            loading: 'eager',
           });
           imageWrapper.appendChild(img);
           imageCell.appendChild(imageWrapper);
@@ -1205,6 +1237,7 @@
         google.script.run
           .withSuccessHandler((data) => {
             state.categories = data.categories || [];
+            buildProductImageMap();
             renderTabs();
             renderProducts();
             renderRankList();

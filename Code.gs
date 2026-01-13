@@ -216,8 +216,38 @@ function getRankingSummary() {
   const rows = sheet.getRange(2, 1, lastRow - 1, DATA_COLUMNS).getValues();
   const productMap = buildRankingMap(rows);
   const products = buildProductRanking(productMap).slice(0, 15);
+  const enrichedProducts = enrichRankingImages(products);
 
-  return { products };
+  return { products: enrichedProducts };
+}
+
+function enrichRankingImages(products) {
+  if (!Array.isArray(products) || !products.length) return products || [];
+
+  let fallbackMap;
+  return products.map((item) => {
+    if (!item) return item;
+    if (item.imageUrl) return item;
+    const key = String(item.product || '').trim();
+    if (!key) return item;
+    if (!fallbackMap) fallbackMap = buildProductImageLookup();
+    const fallbackUrl = fallbackMap[key];
+    return fallbackUrl ? { ...item, imageUrl: fallbackUrl } : item;
+  });
+}
+
+function buildProductImageLookup() {
+  const map = {};
+  const categories = buildCategoriesFromDrive();
+  categories.forEach((category) => {
+    (category.items || []).forEach((item) => {
+      const key = String(item.product || '').trim();
+      if (key && item.imageUrl) {
+        map[key] = item.imageUrl;
+      }
+    });
+  });
+  return map;
 }
 
 function buildRankingMap(rows) {
