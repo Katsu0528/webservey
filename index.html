@@ -13,6 +13,7 @@
     <style>
       :root {
         --accent: #2563eb;
+        --accent-2: #8b5cf6;
         --border: #e5e7eb;
         --muted: #f9fafb;
         --text: #111827;
@@ -435,6 +436,38 @@
         resize: vertical;
         box-sizing: border-box;
         background: #fff;
+      }
+
+      .q2-controls {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 10px 0 8px;
+      }
+
+      .chip {
+        border: 1px solid var(--border);
+        background: #fff;
+        border-radius: 999px;
+        padding: 8px 12px;
+        font-weight: 800;
+        cursor: pointer;
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.04);
+        transition: 0.15s;
+      }
+
+      .chip[aria-pressed='true'] {
+        border-color: transparent;
+        color: #fff;
+        background: linear-gradient(120deg, var(--accent), var(--accent-2));
+        box-shadow: 0 10px 22px rgba(108, 140, 255, 0.18);
+      }
+
+      .q2-hint {
+        margin: 0;
+        font-size: 13px;
+        color: #64748b;
       }
 
       button.primary {
@@ -1176,11 +1209,34 @@
                 <div class="rank-list" id="rank-list"></div>
                 <div class="status" id="status"></div>
               </div>
-              <div class="selection-panel__footer">
-                <button class="primary" id="submit-btn">この内容で送信する</button>
-              </div>
             </aside>
           </div>
+        </section>
+
+        <section id="q2">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">STEP 2</p>
+              <h2>🍙 軽食販売コーナーについて</h2>
+              <p class="section-lead">
+                自販機の横に軽食販売コーナーを設置します！働いている時に食べたくなるものや、コンビニ等でよく買うものを教えてください！
+              </p>
+            </div>
+          </div>
+
+          <div class="q2-controls">
+            <button type="button" class="chip" id="snack-none-btn" aria-pressed="false">特になし</button>
+            <p class="q2-hint">「特になし」または自由記入のどちらかが必須です。</p>
+          </div>
+
+          <textarea
+            id="snack-text"
+            placeholder="例：プロテインバー、カップ味噌汁、ナッツ、ゆで卵、サラダチキン、おにぎり など"
+          ></textarea>
+        </section>
+
+        <section id="submit-section">
+          <button class="primary" id="submit-btn">この内容で送信する</button>
         </section>
       </div>
 
@@ -1211,6 +1267,8 @@
         selectedCategory: null,
         selection: { selectedProducts: [null, null, null], activeRank: 0 },
         freeText: '',
+        snackNone: false,
+        snackText: '',
       };
       const DEBUG = false;
       const productImageMap = new Map();
@@ -1248,6 +1306,8 @@
         rankingStatus: document.getElementById('ranking-status'),
         rankingTop3: document.getElementById('ranking-top3'),
         rankingList: document.getElementById('ranking-cards'),
+        snackNoneBtn: document.getElementById('snack-none-btn'),
+        snackText: document.getElementById('snack-text'),
       };
 
       const viewState = { current: 'form' };
@@ -1409,6 +1469,14 @@
         els.count.textContent = `${filled}/3`;
       }
 
+      function updateSubmitAvailability() {
+        const selection = getSelection();
+        const filledTop3 = selection.selectedProducts.filter(Boolean).length === 3;
+        const snackText = (state.snackText || '').trim();
+        const snackOk = Boolean(state.snackNone) || snackText.length > 0;
+        els.submit.disabled = !(filledTop3 && snackOk);
+      }
+
       function updateProductSelections() {
         const cards = els.productGrid.querySelectorAll('.product-card');
         const selection = getSelection();
@@ -1433,6 +1501,7 @@
           }
         });
         updateCount();
+        updateSubmitAvailability();
       }
 
       function renderTabs() {
@@ -1545,6 +1614,7 @@
         selection.activeRank = index;
         updateProductSelections();
         renderRankList();
+        updateSubmitAvailability();
       }
 
       function reorderSelectedProducts(fromIndex, toIndex) {
@@ -1559,6 +1629,7 @@
         selection.activeRank = toIndex;
         updateProductSelections();
         renderRankList();
+        updateSubmitAvailability();
       }
 
       function assignProductToActiveRank(item) {
@@ -1567,6 +1638,7 @@
         const activeIndex = typeof selection.activeRank === 'number' ? selection.activeRank : 0;
         const targetIndex = emptyIndex >= 0 && selection.selectedProducts[activeIndex] ? emptyIndex : activeIndex;
         placeProductAtRank(item, targetIndex);
+        updateSubmitAvailability();
       }
 
       function renderRankList() {
@@ -1639,6 +1711,7 @@
           els.rankList.appendChild(row);
         });
         updateCount();
+        updateSubmitAvailability();
       }
 
       function handleSubmit() {
@@ -1652,9 +1725,19 @@
           return;
         }
 
+        const snackText = (state.snackText || '').trim();
+        const snackOk = state.snackNone || snackText.length > 0;
+        if (!snackOk) {
+          setStatus('「特になし」または自由記入のどちらかを入力してください。', true);
+          els.submit.disabled = false;
+          return;
+        }
+
         const payload = {
           selectedProducts: getCleanProducts(selection),
           freeText: (state.freeText || '').trim(),
+          snackNone: Boolean(state.snackNone),
+          snackText: snackText,
         };
 
         google.script.run
@@ -1662,9 +1745,17 @@
             setStatus('ご回答ありがとうございました。みなさんのご意見を集計します。');
             state.selection = { selectedProducts: [null, null, null], activeRank: 0 };
             state.freeText = '';
+            state.snackNone = false;
+            state.snackText = '';
+            if (els.snackNoneBtn) {
+              els.snackNoneBtn.setAttribute('aria-pressed', 'false');
+            }
+            if (els.snackText) {
+              els.snackText.value = '';
+            }
             renderProducts();
             renderRankList();
-            els.submit.disabled = false;
+            updateSubmitAvailability();
             fetchRankingSummary();
           })
           .withFailureHandler((err) => {
@@ -1718,9 +1809,9 @@
               { idx: 2, place: 3, medal: '🥉', cls: 'podium-card place-3' },
             ]
           : [
-              { idx: 2, place: 3, medal: '🥉', cls: 'podium-card place-3' },
-              { idx: 0, place: 1, medal: '👑', cls: 'podium-card place-1' },
               { idx: 1, place: 2, medal: '🥈', cls: 'podium-card place-2' },
+              { idx: 0, place: 1, medal: '👑', cls: 'podium-card place-1' },
+              { idx: 2, place: 3, medal: '🥉', cls: 'podium-card place-3' },
             ];
 
         order.forEach(({ idx, place, medal, cls }) => {
@@ -1882,7 +1973,26 @@
       }
 
       function setupInputs() {
-        return;
+        if (els.snackNoneBtn) {
+          els.snackNoneBtn.addEventListener('click', () => {
+            state.snackNone = !state.snackNone;
+            els.snackNoneBtn.setAttribute('aria-pressed', String(state.snackNone));
+            updateSubmitAvailability();
+          });
+        }
+
+        if (els.snackText) {
+          els.snackText.addEventListener('input', (event) => {
+            state.snackText = event.target.value || '';
+            if ((state.snackText || '').trim().length > 0 && state.snackNone) {
+              state.snackNone = false;
+              if (els.snackNoneBtn) {
+                els.snackNoneBtn.setAttribute('aria-pressed', 'false');
+              }
+            }
+            updateSubmitAvailability();
+          });
+        }
       }
 
       function updateSectionLead() {
@@ -1915,6 +2025,7 @@
             renderProducts();
             renderRankList();
             setStatus('');
+            updateSubmitAvailability();
           })
           .withFailureHandler((err) => {
             setStatus(err?.message || 'データの取得に失敗しました。フォルダの権限やIDをご確認ください。', true);
