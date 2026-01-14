@@ -1270,6 +1270,7 @@
         freeText: '',
         snackNone: false,
         snackText: '',
+        email: '',
       };
       const DEBUG = false;
       const productImageMap = new Map();
@@ -1739,6 +1740,7 @@
           freeText: (state.freeText || '').trim(),
           snackNone: Boolean(state.snackNone),
           snackText: snackText,
+          email: state.email,
         };
 
         google.script.run
@@ -2021,6 +2023,7 @@
         google.script.run
           .withSuccessHandler((data) => {
             state.categories = data.categories || [];
+            state.email = data.email || '';
             buildProductImageMap();
             renderTabs();
             renderProducts();
