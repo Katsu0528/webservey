@@ -603,18 +603,18 @@
       }
 
       /* ===== Result TOP3 Podium ===== */
-      .ranking-top3 {
+      #ranking-view .ranking-top3 {
         margin: 12px 0 18px;
       }
 
-      .podium {
+      #ranking-view .podium {
         display: grid;
         grid-template-columns: 1fr 1.15fr 1fr;
         gap: 14px;
         align-items: end;
       }
 
-      .podium-card {
+      #ranking-view .podium-card {
         border-radius: 22px;
         border: 1px solid var(--border);
         background: #fff;
@@ -624,37 +624,37 @@
         gap: 10px;
       }
 
-      .podium-card.place-1 {
+      #ranking-view .podium-card.place-1 {
         transform: translateY(-10px);
         border-width: 2px;
         border-color: #fbbf24;
         background: linear-gradient(180deg, #fff7ed, #ffffff 55%);
       }
 
-      .podium-card.place-2 {
+      #ranking-view .podium-card.place-2 {
         border-color: #cbd5e1;
         background: linear-gradient(180deg, #f8fafc, #ffffff 60%);
       }
 
-      .podium-card.place-3 {
+      #ranking-view .podium-card.place-3 {
         border-color: #fdba74;
         background: linear-gradient(180deg, #fff7ed, #ffffff 60%);
       }
 
-      .podium-head {
+      #ranking-view .podium-head {
         display: flex;
         justify-content: space-between;
         align-items: baseline;
         gap: 10px;
       }
 
-      .podium-badge {
+      #ranking-view .podium-badge {
         font-weight: 900;
         font-size: 18px;
         letter-spacing: 0.02em;
       }
 
-      .podium-pt {
+      #ranking-view .podium-pt {
         font-size: 14px;
         font-weight: 800;
         color: #475569;
@@ -664,36 +664,56 @@
         border-radius: 999px;
       }
 
-      .podium-media {
+      #ranking-view .podium-media {
         border-radius: 18px;
         border: 1px solid var(--border);
         background: #f8fafc;
         overflow: hidden;
       }
 
-      .podium-media img {
+      #ranking-view .podium-media img {
         width: 100%;
         height: 320px;
         object-fit: contain;
         display: block;
       }
 
-      .podium-card.place-1 .podium-media img {
-        height: 380px;
+      #ranking-view .podium-card.place-1 .podium-media img {
+        height: 400px;
       }
 
-      .podium-title {
+      #ranking-view .podium-card.place-2 .podium-media img {
+        height: 340px;
+      }
+
+      #ranking-view .podium-card.place-3 .podium-media img {
+        height: 320px;
+      }
+
+      #ranking-view .podium-title {
         font-size: 22px;
         font-weight: 900;
         line-height: 1.2;
       }
 
-      .podium-meta {
+      #ranking-view .podium-card.place-1 .podium-title {
+        font-size: 24px;
+      }
+
+      #ranking-view .podium-card.place-2 .podium-title {
+        font-size: 21px;
+      }
+
+      #ranking-view .podium-card.place-3 .podium-title {
+        font-size: 20px;
+      }
+
+      #ranking-view .podium-meta {
         font-size: 14px;
         color: #64748b;
       }
 
-      .podium-total {
+      #ranking-view .podium-total {
         font-size: 14px;
         font-weight: 800;
         color: #0f172a;
@@ -704,39 +724,59 @@
       }
 
       @media (max-width: 720px) {
-        .podium {
+        #ranking-view .podium {
           grid-template-columns: 1fr;
           gap: 12px;
           align-items: stretch;
         }
 
-        .podium-card.place-1 {
+        #ranking-view .podium-card.place-1 {
           transform: none;
         }
 
-        .podium-media img {
+        #ranking-view .podium-media img {
           height: 240px;
         }
 
-        .podium-card.place-1 .podium-media img {
+        #ranking-view .podium-card.place-1 .podium-media img {
           height: 260px;
         }
 
-        .podium-title {
+        #ranking-view .podium-card.place-2 .podium-media img {
+          height: 240px;
+        }
+
+        #ranking-view .podium-card.place-3 .podium-media img {
+          height: 230px;
+        }
+
+        #ranking-view .podium-title {
           font-size: 20px;
+        }
+
+        #ranking-view .podium-card.place-1 .podium-title {
+          font-size: 22px;
+        }
+
+        #ranking-view .podium-card.place-2 .podium-title {
+          font-size: 20px;
+        }
+
+        #ranking-view .podium-card.place-3 .podium-title {
+          font-size: 19px;
         }
       }
 
       @media (max-width: 380px) {
-        .podium-media img {
+        #ranking-view .podium-media img {
           height: 210px;
         }
 
-        .podium-card.place-1 .podium-media img {
+        #ranking-view .podium-card.place-1 .podium-media img {
           height: 230px;
         }
 
-        .podium-title {
+        #ranking-view .podium-title {
           font-size: 18px;
         }
       }
@@ -984,7 +1024,7 @@
         .rank-content .muted {
           font-size: 12px;
         }
-        .result-top3-media img {
+        #ranking-view .result-top3-media img {
           height: 240px;
         }
         .vending-area {
@@ -1071,6 +1111,27 @@
           -webkit-box-orient: vertical;
           overflow: hidden;
         }
+      }
+
+      /* 投票画面のTOP3は標準サイズに固定（特大化の影響を遮断） */
+      #form-view .rank-thumb {
+        width: 60px;
+        height: 60px;
+        border-radius: 10px;
+      }
+
+      #form-view .rank-label {
+        font-size: 14px;
+        min-width: 70px;
+      }
+
+      #form-view .rank-content {
+        font-size: 14px;
+      }
+
+      #form-view .rank-item {
+        padding: 10px;
+        border-radius: 10px;
       }
     </style>
   </head>
@@ -1444,13 +1505,9 @@
 
           const meta = document.createElement('div');
           meta.className = 'meta';
-          const maker = document.createElement('span');
-          maker.className = 'maker';
-          maker.textContent = item.maker || 'メーカー不明';
           const price = document.createElement('span');
           price.className = 'price';
           price.textContent = item.price || '';
-          meta.appendChild(maker);
           meta.appendChild(price);
 
           const title = document.createElement('h4');
@@ -1557,7 +1614,7 @@
             title.textContent = item.product;
             const meta = document.createElement('div');
             meta.className = 'muted';
-            meta.textContent = `${item.category} / ${item.maker || 'メーカー不明'} / ${item.price || ''}`;
+            meta.textContent = `${item.category || ''}${item.price ? ' / ' + item.price : ''}`;
             content.appendChild(title);
             content.appendChild(meta);
 
@@ -1653,11 +1710,18 @@
         const podium = document.createElement('div');
         podium.className = 'podium';
 
-        const order = [
-          { idx: 1, place: 2, medal: '🥈', cls: 'podium-card place-2' },
-          { idx: 0, place: 1, medal: '👑', cls: 'podium-card place-1' },
-          { idx: 2, place: 3, medal: '🥉', cls: 'podium-card place-3' },
-        ];
+        const isMobile = window.matchMedia('(max-width: 720px)').matches;
+        const order = isMobile
+          ? [
+              { idx: 0, place: 1, medal: '👑', cls: 'podium-card place-1' },
+              { idx: 1, place: 2, medal: '🥈', cls: 'podium-card place-2' },
+              { idx: 2, place: 3, medal: '🥉', cls: 'podium-card place-3' },
+            ]
+          : [
+              { idx: 2, place: 3, medal: '🥉', cls: 'podium-card place-3' },
+              { idx: 0, place: 1, medal: '👑', cls: 'podium-card place-1' },
+              { idx: 1, place: 2, medal: '🥈', cls: 'podium-card place-2' },
+            ];
 
         order.forEach(({ idx, place, medal, cls }) => {
           const item = top3Items[idx];
@@ -1703,7 +1767,7 @@
           const meta = document.createElement('div');
           meta.className = 'podium-meta';
           meta.textContent = item
-            ? `${item.category || ''}${item.maker ? ' / ' + item.maker : ''}${item.price ? ' / ' + item.price : ''}`
+            ? `${item.category || ''}${item.price ? ' / ' + item.price : ''}`
             : '';
 
           const points = document.createElement('div');
@@ -1777,7 +1841,7 @@
 
           const sub = document.createElement('div');
           sub.className = 'ranking-sub';
-          sub.textContent = [item?.maker, item?.category].filter(Boolean).join(' / ');
+          sub.textContent = [item?.category].filter(Boolean).join(' / ');
 
           info.appendChild(name);
           if (sub.textContent) info.appendChild(sub);
