@@ -2,7 +2,7 @@
  * 自動販売機アンケート（Apps Script）
  *
  * - スプレッドシートの各カテゴリーシートから商品情報を取得
- * - 回答を「回答」シートへ保存（メールアドレスはバックエンドで取得）
+ * - 回答を「回答」シートへ保存
  */
 
 const SPREADSHEET_ID = '13MM299vAlOK437M7qP3BhFILD2_-rh8KG8doveVZcFQ';
@@ -47,7 +47,6 @@ function getInitialData() {
 
   return {
     categories,
-    email: safeGetEmail_(),
   };
 }
 
@@ -57,13 +56,10 @@ function submitResponse(payload) {
   if (!ranking) throw new Error('1位から3位まで選択してください。');
 
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const emailFromPayload = payload && payload.email ? String(payload.email).trim() : '';
-  const emailFromSession = safeGetEmail_();
-  const email = (emailFromPayload || emailFromSession || 'unknown').toLowerCase();
 
-  appendResponseRow(ss, email, ranking, payload.freeText, payload.snackNone, payload.snackText);
-  appendAggregateRows(ss, email, ranking, payload.freeText);
-  appendFreeTextRow(ss, email, payload.freeText);
+  appendResponseRow(ss, ranking, payload.freeText, payload.snackNone, payload.snackText);
+  appendAggregateRows(ss, ranking, payload.freeText);
+  appendFreeTextRow(ss, payload.freeText);
 
   return { ok: true };
 }
@@ -74,12 +70,11 @@ function normalizeRanking(list) {
   return items;
 }
 
-function appendResponseRow(ss, email, ranking, freeText, snackNone, snackText) {
+function appendResponseRow(ss, ranking, freeText, snackNone, snackText) {
   const sheet = ss.getSheetByName(RESPONSE_SHEET_NAME) || ss.insertSheet(RESPONSE_SHEET_NAME);
   if (sheet.getLastRow() === 0) {
     sheet.appendRow([
       'タイムスタンプ',
-      'メールアドレス',
       '1位カテゴリ',
       '1位商品名',
       '1位ポイント',
@@ -108,7 +103,6 @@ function appendResponseRow(ss, email, ranking, freeText, snackNone, snackText) {
 
   sheet.appendRow([
     new Date(),
-    email,
     ...buildProductCells(ranking[0], 0),
     ...buildProductCells(ranking[1], 1),
     ...buildProductCells(ranking[2], 2),
@@ -118,12 +112,11 @@ function appendResponseRow(ss, email, ranking, freeText, snackNone, snackText) {
   ]);
 }
 
-function appendAggregateRows(ss, email, ranking, freeText) {
+function appendAggregateRows(ss, ranking, freeText) {
   const sheet = ss.getSheetByName(AGGREGATE_SHEET_NAME) || ss.insertSheet(AGGREGATE_SHEET_NAME);
   if (sheet.getLastRow() === 0) {
     sheet.appendRow([
       'タイムスタンプ',
-      'メールアドレス',
       '順位',
       'ポイント',
       'カテゴリ',
@@ -137,7 +130,6 @@ function appendAggregateRows(ss, email, ranking, freeText) {
   ranking.forEach((product, idx) => {
     sheet.appendRow([
       new Date(),
-      email,
       `${idx + 1}位`,
       RANK_POINTS[idx] || 0,
       (product && product.category) || '',
@@ -151,20 +143,20 @@ function appendAggregateRows(ss, email, ranking, freeText) {
   refreshPointSummary(sheet);
 }
 
-function appendFreeTextRow(ss, email, freeText) {
+function appendFreeTextRow(ss, freeText) {
   const text = typeof freeText === 'string' ? freeText.trim() : '';
   if (!text) return;
 
   const sheet = ss.getSheetByName(FREE_TEXT_SHEET_NAME) || ss.insertSheet(FREE_TEXT_SHEET_NAME);
   if (sheet.getLastRow() === 0) {
-    sheet.appendRow(['タイムスタンプ', 'メールアドレス', '自由記入']);
+    sheet.appendRow(['タイムスタンプ', '自由記入']);
   }
 
-  sheet.appendRow([new Date(), email, text]);
+  sheet.appendRow([new Date(), text]);
 }
 
 function refreshPointSummary(sheet) {
-  const DATA_COLUMNS = 9;
+  const DATA_COLUMNS = 8;
   const SUMMARY_START_COL = 11; // Column K
   const SUMMARY_TITLE_CELL = sheet.getRange(1, SUMMARY_START_COL);
   const SUMMARY_START_ROW = 2;
@@ -185,11 +177,11 @@ function refreshPointSummary(sheet) {
   data.forEach((row) => {
     const timestamp = row[0];
     if (!timestamp) return;
-    const points = Number(row[4]) || 0;
-    const category = row[5] || '';
-    const maker = row[6] || '';
-    const product = row[7] || '';
-    const price = row[8] || '';
+    const points = Number(row[2]) || 0;
+    const category = row[3] || '';
+    const maker = row[4] || '';
+    const product = row[5] || '';
+    const price = row[6] || '';
     const key = [category, maker, product, price].join('||');
 
     if (!summaryMap[key]) {
@@ -219,7 +211,7 @@ function getRankingSummary() {
   if (!sheet) return { products: [] };
 
   const lastRow = sheet.getLastRow();
-  const DATA_COLUMNS = 9;
+  const DATA_COLUMNS = 8;
   if (lastRow <= 1) return { products: [] };
 
   const rows = sheet.getRange(2, 1, lastRow - 1, DATA_COLUMNS).getValues();
@@ -265,11 +257,11 @@ function buildRankingMap(rows) {
   rows.forEach((row) => {
     const timestamp = row[0];
     if (!timestamp) return;
-    const points = Number(row[3]) || 0;
-    const category = row[4] || '';
-    const maker = row[5] || '';
-    const product = row[6] || '';
-    const price = row[7] || '';
+    const points = Number(row[2]) || 0;
+    const category = row[3] || '';
+    const maker = row[4] || '';
+    const product = row[5] || '';
+    const price = row[6] || '';
     const productKey = normalizeRankingKey_(category, product);
     if (!productKey) return;
 
@@ -569,22 +561,6 @@ function normalizeRankingKey_(category, product) {
   normalizedProduct = normalizedProduct.replace(/[()（）\[\]【】]/g, '');
   normalizedProduct = normalizedProduct.replace(/\s+/g, '');
   return `${normalizedCategory}|${normalizedProduct}`;
-}
-
-function safeGetEmail_() {
-  try {
-    const activeEmail = Session.getActiveUser().getEmail();
-    if (activeEmail) return activeEmail;
-  } catch (e) {
-    // ignore
-  }
-  try {
-    const effectiveEmail = Session.getEffectiveUser().getEmail();
-    if (effectiveEmail) return effectiveEmail;
-  } catch (e) {
-    // ignore
-  }
-  return '';
 }
 
 function stripExtension(name) {
