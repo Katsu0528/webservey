@@ -1117,7 +1117,8 @@
           font-size: 24px;
         }
         .ranking-table {
-          min-width: 100%;
+          min-width: 0;
+          width: 100%;
         }
         .ranking-card {
           grid-template-columns: 40px 1fr;
@@ -1143,6 +1144,50 @@
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
+        }
+      }
+
+      /* ===== Responsive recovery ===== */
+      @media (max-width: 720px) {
+        .selection-layout {
+          grid-template-columns: 1fr !important;
+        }
+        .vending-area {
+          order: 1;
+        }
+        .selection-panel {
+          order: 2;
+          position: static !important;
+          top: auto !important;
+          max-height: none !important;
+        }
+        .actions {
+          position: static !important;
+          padding-bottom: 8px;
+        }
+        .tab {
+          padding: 8px 12px;
+        }
+        .media-frame {
+          min-height: 180px;
+        }
+        #ranking-view .podium {
+          display: grid !important;
+          grid-template-columns: 1fr !important;
+          gap: 12px !important;
+        }
+        #ranking-view .podium-card .podium-media img {
+          height: 260px !important;
+        }
+        .ranking-table {
+          min-width: 0 !important;
+          width: 100% !important;
+        }
+        .ranking-table th,
+        .ranking-table td {
+          padding: 10px !important;
+          font-size: 13px !important;
+          word-break: break-word;
         }
       }
 
@@ -1390,13 +1435,21 @@
         if (width) img.width = width;
         if (height) img.height = height;
 
-        const applyFallback = () => {
+        const raw = src ? String(src) : '';
+        const optimized = getOptimizedImageUrl(raw, size);
+        img.dataset.rawSrc = raw;
+        img.dataset.triedRaw = 'false';
+
+        img.onerror = () => {
+          if (img.dataset.triedRaw === 'false' && img.dataset.rawSrc) {
+            img.dataset.triedRaw = 'true';
+            img.src = img.dataset.rawSrc;
+            return;
+          }
           img.onerror = null;
           img.src = FALLBACK_IMAGE;
         };
-
-        img.onerror = applyFallback;
-        img.src = getOptimizedImageUrl(src, size) || FALLBACK_IMAGE;
+        img.src = optimized || raw || FALLBACK_IMAGE;
       }
 
       function createImageElement(src, alt, options = {}) {
@@ -1472,6 +1525,7 @@
       }
 
       function updateSubmitAvailability() {
+        if (!els.submit) return;
         const selection = getSelection();
         const filledTop3 = selection.selectedProducts.filter(Boolean).length === 3;
         const snackText = (state.snackText || '').trim();
@@ -2014,6 +2068,7 @@
         setStatus('読み込み中...');
         updateSectionLead();
         setupInputs();
+        updateSubmitAvailability();
         if (typeof google === 'undefined' || !google.script?.run) {
           setStatus('プレビューではデータを読み込めません。Apps Script 環境でお試しください。', true);
           els.submit.disabled = true;
