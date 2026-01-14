@@ -30,7 +30,7 @@
       .page {
         max-width: 980px;
         margin: 0 auto;
-        padding: 28px 16px 56px;
+        padding: 20px 14px 44px;
       }
 
       h1 {
@@ -179,8 +179,8 @@
       .card-grid {
         position: relative;
         display: grid;
-        gap: 12px;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 10px;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
         align-items: stretch;
       }
 
@@ -759,15 +759,61 @@
         line-height: 1.35;
       }
 
+      @media (max-width: 720px) {
+        .selection-layout {
+          grid-template-columns: 1fr;
+          gap: 12px;
+        }
+        .selection-panel {
+          order: -1;
+        }
+        .vending-area {
+          order: 0;
+        }
+        .card-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .card {
+          padding: 10px;
+          border-radius: 14px;
+        }
+        .media-frame {
+          min-height: 140px;
+        }
+        .card h4 {
+          font-size: 14px;
+        }
+        .card .meta {
+          font-size: 12px;
+        }
+        .category-tabs {
+          gap: 8px;
+        }
+        .tab {
+          padding: 10px 14px;
+          font-size: 14px;
+        }
+        button.primary {
+          width: 100%;
+          justify-content: center;
+        }
+        .actions {
+          gap: 10px;
+        }
+      }
+
+      @media (max-width: 380px) {
+        .card-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
       @media (max-width: 600px) {
         .selection-layout {
           grid-template-columns: 1fr;
         }
         h1 {
           font-size: 24px;
-        }
-        .media-frame {
-          min-height: 180px;
         }
         .ranking-table {
           min-width: 100%;
@@ -788,6 +834,14 @@
           grid-area: meta;
           flex-direction: row;
           justify-content: flex-end;
+          gap: 10px;
+        }
+        .ranking-name {
+          white-space: normal;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
         }
       }
     </style>
@@ -885,6 +939,7 @@
         ranking: { width: 44, height: 44 },
       };
       const RANK_POINTS = [3, 2, 1];
+      const isTouch = matchMedia('(pointer:coarse)').matches;
 
       const els = {
         tabs: document.getElementById('category-tabs'),
@@ -1397,8 +1452,8 @@
             size: IMAGE_SIZES.ranking,
             width: IMAGE_DIMENSIONS.ranking.width,
             height: IMAGE_DIMENSIONS.ranking.height,
-            fetchPriority: 'low',
-            loading: 'eager',
+            fetchPriority: idx < 3 ? 'high' : 'low',
+            loading: idx < 3 ? 'eager' : 'lazy',
           });
           thumb.appendChild(img);
 
@@ -1455,8 +1510,21 @@
         return;
       }
 
+      function updateSectionLead() {
+        const lead = document.querySelector('#q1 .section-lead');
+        if (!lead) return;
+        if (isTouch) {
+          lead.innerHTML =
+            '普段よく飲む飲み物を、1位〜3位の順で選んでください。<br>商品画像をタップすると選択できます。順位を変えるときは、上の枠（1位/2位/3位）をタップしてから商品を選び直してください。';
+          return;
+        }
+        lead.innerHTML =
+          '普段よく飲む飲み物を、1位〜3位の順で選んでください。<br>商品画像をクリック、またはドラッグ&ドロップで並び替えできます。';
+      }
+
       function load() {
         setStatus('読み込み中...');
+        updateSectionLead();
         setupInputs();
         if (typeof google === 'undefined' || !google.script?.run) {
           setStatus('プレビューではデータを読み込めません。Apps Script 環境でお試しください。', true);
