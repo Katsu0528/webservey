@@ -285,6 +285,106 @@
         gap: 14px;
       }
 
+      #rank-list {
+        display: grid;
+        gap: 16px;
+      }
+
+      .top3-card {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 16px;
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        background: #fff;
+        box-shadow: var(--shadow);
+        cursor: pointer;
+      }
+
+      .top3-card.is-active {
+        border: 2px solid var(--accent);
+        box-shadow: 0 18px 34px rgba(255, 126, 182, 0.18);
+      }
+
+      .top3-card.drag-over {
+        border-color: rgba(47, 111, 237, 0.55);
+        background: #f8fbff;
+        box-shadow: none;
+      }
+
+      .top3-card__rank {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        font-weight: 900;
+      }
+
+      .top3-medal {
+        font-size: 22px;
+      }
+
+      .top3-ranktext {
+        font-size: 22px;
+      }
+
+      .top3-pt {
+        font-size: 16px;
+        color: #475569;
+        font-weight: 800;
+      }
+
+      .top3-card__media {
+        width: 100%;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: #f8fafc;
+        overflow: hidden;
+      }
+
+      .top3-card__media img {
+        width: 100%;
+        height: 340px;
+        object-fit: contain;
+        display: block;
+      }
+
+      .top3-title {
+        font-size: 24px;
+        font-weight: 900;
+        line-height: 1.2;
+      }
+
+      .top3-meta {
+        font-size: 16px;
+        color: #64748b;
+        margin-top: 4px;
+      }
+
+      .top3-card__hint {
+        font-size: 13px;
+        color: #6b7280;
+        background: #f8fafc;
+        border: 1px dashed #e2e8f0;
+        border-radius: 12px;
+        padding: 8px 10px;
+      }
+
+      .top3-card--rank1 {
+        border-color: #fbbf24;
+        background: #fff7ed;
+      }
+
+      .top3-card--rank2 {
+        border-color: #cbd5e1;
+        background: #f8fafc;
+      }
+
+      .top3-card--rank3 {
+        border-color: #fdba74;
+        background: #fff7ed;
+      }
+
       .rank-item {
         border: 1px dashed var(--border);
         border-radius: 16px;
@@ -840,6 +940,15 @@
         .rank-content .muted {
           font-size: 12px;
         }
+        .top3-title {
+          font-size: 20px;
+        }
+        .top3-card__media img {
+          height: 240px;
+        }
+        .top3-ranktext {
+          font-size: 20px;
+        }
         .vending-area {
           order: 0;
         }
@@ -886,6 +995,12 @@
         }
         .card-grid {
           grid-template-columns: 1fr;
+        }
+        .top3-card__media img {
+          height: 210px;
+        }
+        .top3-title {
+          font-size: 18px;
         }
       }
 
@@ -1141,7 +1256,7 @@
         dragState.product = null;
         dragState.fromIndex = null;
         if (els.rankList) {
-          els.rankList.querySelectorAll('.rank-item').forEach((row) => row.classList.remove('drag-over'));
+          els.rankList.querySelectorAll('.top3-card').forEach((row) => row.classList.remove('drag-over'));
         }
       }
 
@@ -1365,65 +1480,87 @@
         if (!els.rankList) return;
         els.rankList.innerHTML = '';
 
-        const labels = ['1位 (4pt)', '2位 (2pt)', '3位 (1pt)'];
+        const labels = ['1位', '2位', '3位'];
+        const medals = ['👑', '🥈', '🥉'];
         const selection = getSelection();
         selection.selectedProducts.forEach((item, idx) => {
-          const row = document.createElement('div');
-          row.className = 'rank-item' + (selection.activeRank === idx ? ' active' : '');
-          row.dataset.index = idx;
-          row.addEventListener('dragover', handleRankDragOver);
-          row.addEventListener('dragenter', handleRankDragOver);
-          row.addEventListener('dragleave', handleRankDragLeave);
-          row.addEventListener('drop', (event) => handleRankDrop(event, idx));
-          row.addEventListener('click', () => {
+          const card = document.createElement('div');
+          card.className = `top3-card top3-card--rank${idx + 1}` + (selection.activeRank === idx ? ' is-active' : '');
+          card.dataset.index = idx;
+          card.addEventListener('dragover', handleRankDragOver);
+          card.addEventListener('dragenter', handleRankDragOver);
+          card.addEventListener('dragleave', handleRankDragLeave);
+          card.addEventListener('drop', (event) => handleRankDrop(event, idx));
+          card.addEventListener('click', () => {
             selection.activeRank = idx;
             renderRankList();
           });
 
-          const label = document.createElement('div');
-          label.className = 'rank-label';
-          label.textContent = labels[idx];
+          const rank = document.createElement('div');
+          rank.className = 'top3-card__rank';
+          const medal = document.createElement('span');
+          medal.className = 'top3-medal';
+          medal.textContent = medals[idx] || '🏅';
+          const rankText = document.createElement('span');
+          rankText.className = 'top3-ranktext';
+          rankText.textContent = labels[idx];
+          const points = document.createElement('span');
+          points.className = 'top3-pt';
+          points.textContent = `${RANK_POINTS[idx]}pt`;
+          rank.appendChild(medal);
+          rank.appendChild(rankText);
+          rank.appendChild(points);
 
-          const thumb = document.createElement('div');
-          thumb.className = 'rank-thumb';
-          const thumbImg = document.createElement('img');
-          configureImage(thumbImg, {
+          const media = document.createElement('div');
+          media.className = 'top3-card__media';
+          const mediaImg = document.createElement('img');
+          configureImage(mediaImg, {
             src: item?.imageUrl,
             alt: item?.product || '選択なし',
-            size: IMAGE_SIZES.thumb,
-            width: IMAGE_DIMENSIONS.thumb.width,
-            height: IMAGE_DIMENSIONS.thumb.height,
+            size: IMAGE_SIZES.card,
+            width: IMAGE_DIMENSIONS.card.width,
+            height: IMAGE_DIMENSIONS.card.height,
             fetchPriority: 'low',
           });
-          thumb.appendChild(thumbImg);
+          media.appendChild(mediaImg);
 
-          const content = document.createElement('div');
-          content.className = 'rank-content';
+          const info = document.createElement('div');
+          info.className = 'top3-card__info';
 
           if (item) {
             const title = document.createElement('div');
+            title.className = 'top3-title';
             title.textContent = item.product;
             const meta = document.createElement('div');
-            meta.className = 'muted';
+            meta.className = 'top3-meta';
             meta.textContent = `${item.category} / ${item.maker || 'メーカー不明'} / ${item.price || ''}`;
-            content.appendChild(title);
-            content.appendChild(meta);
+            info.appendChild(title);
+            info.appendChild(meta);
 
-            row.draggable = true;
-            row.addEventListener('dragstart', (event) => startRankDrag(event, idx));
-            row.addEventListener('dragend', resetDragState);
+            card.draggable = true;
+            card.addEventListener('dragstart', (event) => startRankDrag(event, idx));
+            card.addEventListener('dragend', resetDragState);
           } else {
-            const empty = document.createElement('div');
-            empty.className = 'rank-empty';
-            empty.textContent = '未選択';
-            content.appendChild(empty);
-            row.removeAttribute('draggable');
+            const title = document.createElement('div');
+            title.className = 'top3-title';
+            title.textContent = '未選択';
+            const meta = document.createElement('div');
+            meta.className = 'top3-meta';
+            meta.textContent = 'タップして順位にセット';
+            info.appendChild(title);
+            info.appendChild(meta);
+            card.removeAttribute('draggable');
           }
 
-          row.appendChild(label);
-          row.appendChild(thumb);
-          row.appendChild(content);
-          els.rankList.appendChild(row);
+          const hint = document.createElement('div');
+          hint.className = 'top3-card__hint';
+          hint.textContent = 'タップしてこの順位にセット';
+
+          card.appendChild(rank);
+          card.appendChild(media);
+          card.appendChild(info);
+          card.appendChild(hint);
+          els.rankList.appendChild(card);
         });
         updateCount();
       }
