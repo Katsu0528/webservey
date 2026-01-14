@@ -528,15 +528,14 @@
         flex-wrap: wrap;
       }
 
-      .close-tab-btn {
-        background: #111827;
-        color: #fff;
-        border: none;
-        border-radius: 12px;
-        padding: 10px 16px;
-        font-size: 14px;
-        cursor: pointer;
-        box-shadow: 0 10px 18px rgba(0, 0, 0, 0.12);
+      .ranking-note {
+        font-size: 13px;
+        color: #6b7280;
+        background: #f8fafc;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 8px 12px;
+        margin-top: 6px;
       }
 
       .ranking-layout {
@@ -815,8 +814,10 @@
             <p class="eyebrow">結果ページ</p>
             <h2>みんなの現在の順位</h2>
             <p class="section-lead">最新のPt順で上位15件を表示しています。</p>
+            <p class="ranking-note">
+              集計は完了しています。この画面はそのまま閉じていただいて問題ありません。
+            </p>
           </div>
-          <button class="close-tab-btn" id="close-tab-btn">入力画面に戻る</button>
         </div>
         <div class="ranking-layout">
           <div class="ranking-results">
@@ -866,7 +867,6 @@
         rankingView: document.getElementById('ranking-view'),
         rankingStatus: document.getElementById('ranking-status'),
         rankingList: document.getElementById('ranking-cards'),
-        closeTabBtn: document.getElementById('close-tab-btn'),
       };
 
       const viewState = { current: 'form' };
@@ -1400,11 +1400,6 @@
         return;
       }
 
-      function closeTab() {
-        switchView('form');
-        setRankingStatus('');
-      }
-
       function load() {
         setStatus('読み込み中...');
         setupInputs();
@@ -1430,9 +1425,6 @@
       }
 
       els.submit.addEventListener('click', handleSubmit);
-      if (els.closeTabBtn) {
-        els.closeTabBtn.addEventListener('click', closeTab);
-      }
       document.addEventListener('DOMContentLoaded', load);
     </script>
   </body>
