@@ -425,6 +425,10 @@
         min-height: 20px;
       }
 
+      #status {
+        display: none;
+      }
+
       .status.error {
         background: #fff5f8;
         color: #d6266f;
@@ -570,6 +574,26 @@
         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
       }
 
+      .top {
+        border-color: #d1d5db;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
+      }
+
+      .top-1 {
+        border-color: #fbbf24;
+        background: #fff7ed;
+      }
+
+      .top-2 {
+        border-color: #cbd5e1;
+        background: #f8fafc;
+      }
+
+      .top-3 {
+        border-color: #fdba74;
+        background: #fff7ed;
+      }
+
       .ranking-rank {
         width: 44px;
         height: 44px;
@@ -581,6 +605,12 @@
         justify-content: center;
         font-weight: 800;
         color: #111827;
+      }
+
+      .ranking-rank.top-rank {
+        background: #111827;
+        color: #fff;
+        border-color: transparent;
       }
 
       .ranking-main {
@@ -815,7 +845,7 @@
             <h2>みんなの現在の順位</h2>
             <p class="section-lead">最新のPt順で上位15件を表示しています。</p>
             <p class="ranking-note">
-              集計は完了しています。この画面はそのまま閉じていただいて問題ありません。
+              集計は完了しています。この画面は閉じていただいて問題ありません。
             </p>
           </div>
         </div>
@@ -894,8 +924,10 @@
       }
 
       function setStatus(message, isError = false) {
-        els.status.textContent = message || '';
+        const has = Boolean(message && String(message).trim());
+        els.status.textContent = has ? message : '';
         els.status.classList.toggle('error', Boolean(isError));
+        els.status.style.display = has ? 'block' : 'none';
       }
 
       function setRankingStatus(message, isError = false) {
@@ -1084,13 +1116,21 @@
         }
 
         els.productGrid.dataset.category = category.name;
-        const preloadUrls = category.items
+        const seen = new Set();
+        const uniqueItems = category.items.filter((item) => {
+          const key = `${item.category}__${item.product}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+
+        const preloadUrls = uniqueItems
           .slice(0, 6)
           .map((item) => getOptimizedImageUrl(item.imageUrl, IMAGE_SIZES.card));
         preloadImages(preloadUrls);
 
         const frag = document.createDocumentFragment();
-        category.items.forEach((item, idx) => {
+        uniqueItems.forEach((item, idx) => {
           const card = document.createElement('div');
           card.className = 'card product-card';
           card.dataset.category = item.category;
@@ -1098,13 +1138,16 @@
 
           const priority = idx < 6 ? 'high' : 'low';
           const loading = idx < 6 ? 'eager' : 'lazy';
-          const img = createImageElement(item.imageUrl, item.product, {
-            size: IMAGE_SIZES.card,
-            width: IMAGE_DIMENSIONS.card.width,
-            height: IMAGE_DIMENSIONS.card.height,
-            fetchPriority: priority,
-            loading,
-          });
+          let img = card.querySelector('.media-frame');
+          if (!img) {
+            img = createImageElement(item.imageUrl, item.product, {
+              size: IMAGE_SIZES.card,
+              width: IMAGE_DIMENSIONS.card.width,
+              height: IMAGE_DIMENSIONS.card.height,
+              fetchPriority: priority,
+              loading,
+            });
+          }
           const badge = document.createElement('span');
           badge.className = 'badge';
           badge.textContent = item.category;
@@ -1316,10 +1359,22 @@
         items.forEach((item, idx) => {
           const card = document.createElement('div');
           card.className = 'ranking-card';
+          if (idx === 0) card.classList.add('top', 'top-1');
+          if (idx === 1) card.classList.add('top', 'top-2');
+          if (idx === 2) card.classList.add('top', 'top-3');
 
           const rank = document.createElement('div');
           rank.className = 'ranking-rank';
-          rank.textContent = String(idx + 1);
+          if (idx === 0) {
+            rank.textContent = '👑1';
+            rank.classList.add('top-rank');
+          } else if (idx === 1) {
+            rank.textContent = '🥈2';
+          } else if (idx === 2) {
+            rank.textContent = '🥉3';
+          } else {
+            rank.textContent = String(idx + 1);
+          }
 
           const main = document.createElement('div');
           main.className = 'ranking-main';
