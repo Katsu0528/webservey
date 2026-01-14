@@ -602,57 +602,143 @@
         gap: 12px;
       }
 
-      /* ===== リザルト専用 TOP3 ===== */
+      /* ===== Result TOP3 Podium ===== */
       .ranking-top3 {
-        display: grid;
-        gap: 18px;
-        margin-bottom: 22px;
+        margin: 12px 0 18px;
       }
 
-      .result-top3-card {
-        background: #fff;
-        border: 2px solid var(--border);
+      .podium {
+        display: grid;
+        grid-template-columns: 1fr 1.15fr 1fr;
+        gap: 14px;
+        align-items: end;
+      }
+
+      .podium-card {
         border-radius: 22px;
-        padding: 18px;
-        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.08);
+        border: 1px solid var(--border);
+        background: #fff;
+        box-shadow: 0 16px 34px rgba(0, 0, 0, 0.08);
+        padding: 14px;
         display: grid;
-        gap: 12px;
+        gap: 10px;
       }
 
-      .result-top3-rank {
-        font-size: 22px;
+      .podium-card.place-1 {
+        transform: translateY(-10px);
+        border-width: 2px;
+        border-color: #fbbf24;
+        background: linear-gradient(180deg, #fff7ed, #ffffff 55%);
+      }
+
+      .podium-card.place-2 {
+        border-color: #cbd5e1;
+        background: linear-gradient(180deg, #f8fafc, #ffffff 60%);
+      }
+
+      .podium-card.place-3 {
+        border-color: #fdba74;
+        background: linear-gradient(180deg, #fff7ed, #ffffff 60%);
+      }
+
+      .podium-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 10px;
+      }
+
+      .podium-badge {
         font-weight: 900;
+        font-size: 18px;
         letter-spacing: 0.02em;
       }
 
-      .result-top3-media {
+      .podium-pt {
+        font-size: 14px;
+        font-weight: 800;
+        color: #475569;
+        border: 1px solid var(--border);
+        background: #fff;
+        padding: 6px 10px;
+        border-radius: 999px;
+      }
+
+      .podium-media {
         border-radius: 18px;
         border: 1px solid var(--border);
         background: #f8fafc;
         overflow: hidden;
       }
 
-      .result-top3-media img {
+      .podium-media img {
         width: 100%;
-        height: 360px;
+        height: 320px;
         object-fit: contain;
         display: block;
       }
 
-      .result-top3-title {
-        font-size: 26px;
-        font-weight: 900;
-        line-height: 1.25;
+      .podium-card.place-1 .podium-media img {
+        height: 380px;
       }
 
-      .result-top3-meta {
-        font-size: 16px;
+      .podium-title {
+        font-size: 22px;
+        font-weight: 900;
+        line-height: 1.2;
+      }
+
+      .podium-meta {
+        font-size: 14px;
         color: #64748b;
       }
 
-      .result-top3-1 {
-        border-color: #fbbf24;
-        background: #fff7ed;
+      .podium-total {
+        font-size: 14px;
+        font-weight: 800;
+        color: #0f172a;
+        background: #f8fafc;
+        border: 1px dashed #e2e8f0;
+        border-radius: 14px;
+        padding: 8px 10px;
+      }
+
+      @media (max-width: 720px) {
+        .podium {
+          grid-template-columns: 1fr;
+          gap: 12px;
+          align-items: stretch;
+        }
+
+        .podium-card.place-1 {
+          transform: none;
+        }
+
+        .podium-media img {
+          height: 240px;
+        }
+
+        .podium-card.place-1 .podium-media img {
+          height: 260px;
+        }
+
+        .podium-title {
+          font-size: 20px;
+        }
+      }
+
+      @media (max-width: 380px) {
+        .podium-media img {
+          height: 210px;
+        }
+
+        .podium-card.place-1 .podium-media img {
+          height: 230px;
+        }
+
+        .podium-title {
+          font-size: 18px;
+        }
       }
 
       .ranking-cards {
@@ -901,12 +987,6 @@
         .result-top3-media img {
           height: 240px;
         }
-        .result-top3-title {
-          font-size: 21px;
-        }
-        .result-top3-rank {
-          font-size: 20px;
-        }
         .vending-area {
           order: 0;
         }
@@ -953,12 +1033,6 @@
         }
         .card-grid {
           grid-template-columns: 1fr;
-        }
-        .result-top3-media img {
-          height: 200px;
-        }
-        .result-top3-title {
-          font-size: 19px;
         }
       }
 
@@ -1062,8 +1136,8 @@
         </div>
         <div class="ranking-layout">
           <div class="ranking-results">
-            <div class="status" id="ranking-status">最新の順位を読み込んでいます...</div>
             <div id="ranking-top3" class="ranking-top3"></div>
+            <div class="status" id="ranking-status">最新の順位を読み込んでいます...</div>
             <div id="ranking-cards" class="ranking-cards"></div>
           </div>
         </div>
@@ -1571,61 +1645,92 @@
         };
       }
 
+      function renderRankingTop3(top3Items) {
+        const box = document.getElementById('ranking-top3');
+        if (!box) return;
+        box.innerHTML = '';
+
+        const podium = document.createElement('div');
+        podium.className = 'podium';
+
+        const order = [
+          { idx: 1, place: 2, medal: '🥈', cls: 'podium-card place-2' },
+          { idx: 0, place: 1, medal: '👑', cls: 'podium-card place-1' },
+          { idx: 2, place: 3, medal: '🥉', cls: 'podium-card place-3' },
+        ];
+
+        order.forEach(({ idx, place, medal, cls }) => {
+          const item = top3Items[idx];
+
+          const card = document.createElement('div');
+          card.className = cls;
+
+          const head = document.createElement('div');
+          head.className = 'podium-head';
+
+          const badge = document.createElement('div');
+          badge.className = 'podium-badge';
+          badge.textContent = `${medal} ${place}位`;
+
+          const pt = document.createElement('div');
+          pt.className = 'podium-pt';
+          const pointText = place === 1 ? '4pt' : place === 2 ? '2pt' : '1pt';
+          pt.textContent = pointText;
+
+          head.appendChild(badge);
+          head.appendChild(pt);
+
+          const media = document.createElement('div');
+          media.className = 'podium-media';
+          const img = document.createElement('img');
+          const resolvedSrc =
+            item?.imageUrl || productImageMap.get(String(item?.product || '').trim()) || FALLBACK_IMAGE;
+          configureImage(img, {
+            src: resolvedSrc,
+            alt: item?.product || '商品画像',
+            size: place === 1 ? 640 : 520,
+            width: place === 1 ? 480 : 420,
+            height: place === 1 ? 480 : 420,
+            fetchPriority: 'high',
+            loading: 'eager',
+          });
+          media.appendChild(img);
+
+          const title = document.createElement('div');
+          title.className = 'podium-title';
+          title.textContent = item?.product || '（データがありません）';
+
+          const meta = document.createElement('div');
+          meta.className = 'podium-meta';
+          meta.textContent = item
+            ? `${item.category || ''}${item.maker ? ' / ' + item.maker : ''}${item.price ? ' / ' + item.price : ''}`
+            : '';
+
+          const points = document.createElement('div');
+          points.className = 'podium-total';
+          points.textContent = `合計 ${item?.points || 0} Pt`;
+
+          card.appendChild(head);
+          card.appendChild(media);
+          card.appendChild(title);
+          card.appendChild(meta);
+          card.appendChild(points);
+
+          podium.appendChild(card);
+        });
+
+        box.appendChild(podium);
+      }
+
       function renderRankingTable(products) {
-        if (els.rankingTop3) {
-          els.rankingTop3.innerHTML = '';
-        }
         els.rankingList.innerHTML = '';
         const items = Array.isArray(products) ? products.slice(0, 15) : [];
-        if (!items.length) return false;
-
-        const top3Items = items.slice(0, 3);
-        if (els.rankingTop3) {
-          const topFrag = document.createDocumentFragment();
-          top3Items.forEach((item, idx) => {
-            if (!item) return;
-            const card = document.createElement('div');
-            card.className = `result-top3-card result-top3-${idx + 1}`;
-
-            const rank = document.createElement('div');
-            rank.className = 'result-top3-rank';
-            const medals = ['👑', '🥈', '🥉'];
-            const points = item?.points ?? 0;
-            rank.textContent = `${medals[idx] || '🏅'} ${idx + 1}位 / ${points}pt`;
-
-            const media = document.createElement('div');
-            media.className = 'result-top3-media';
-            const img = document.createElement('img');
-            const resolvedSrc =
-              item?.imageUrl || productImageMap.get(String(item?.product || '').trim()) || FALLBACK_IMAGE;
-            configureImage(img, {
-              src: resolvedSrc,
-              alt: item?.product || '商品',
-              size: IMAGE_SIZES.resultTop3,
-              width: IMAGE_DIMENSIONS.resultTop3.width,
-              height: IMAGE_DIMENSIONS.resultTop3.height,
-              fetchPriority: 'high',
-              loading: 'eager',
-            });
-            media.appendChild(img);
-
-            const title = document.createElement('div');
-            title.className = 'result-top3-title';
-            title.textContent = item?.product || '商品名不明';
-
-            const meta = document.createElement('div');
-            meta.className = 'result-top3-meta';
-            meta.textContent = [item?.category, item?.maker, item?.price].filter(Boolean).join(' / ');
-
-            card.appendChild(rank);
-            card.appendChild(media);
-            card.appendChild(title);
-            if (meta.textContent) card.appendChild(meta);
-
-            topFrag.appendChild(card);
-          });
-          els.rankingTop3.appendChild(topFrag);
+        if (!items.length) {
+          renderRankingTop3([]);
+          return false;
         }
+
+        renderRankingTop3(items.slice(0, 3));
 
         const frag = document.createDocumentFragment();
         items.slice(3).forEach((item, listIndex) => {
