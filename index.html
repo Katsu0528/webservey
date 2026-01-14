@@ -553,6 +553,103 @@
         gap: 12px;
       }
 
+      .ranking-cards {
+        display: grid;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .ranking-card {
+        display: grid;
+        grid-template-columns: 44px 1fr auto;
+        gap: 12px;
+        align-items: center;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+      }
+
+      .ranking-rank {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: #f3f4f6;
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        color: #111827;
+      }
+
+      .ranking-main {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .ranking-thumb {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--muted);
+        overflow: hidden;
+        flex: 0 0 auto;
+      }
+
+      .ranking-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+      }
+
+      .ranking-info {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .ranking-name {
+        font-weight: 700;
+        color: #111827;
+        line-height: 1.25;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .ranking-sub {
+        font-size: 12px;
+        color: var(--subtext);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .ranking-meta {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 6px;
+        white-space: nowrap;
+      }
+
+      .ranking-points {
+        font-weight: 800;
+        color: #1f2937;
+      }
+
+      .ranking-price {
+        font-size: 12px;
+        color: var(--subtext);
+      }
+
       .ranking-table-wrapper {
         overflow-x: auto;
         border-radius: 14px;
@@ -643,9 +740,26 @@
         .media-frame {
           min-height: 180px;
         }
-      .ranking-table {
-        min-width: 100%;
-      }
+        .ranking-table {
+          min-width: 100%;
+        }
+        .ranking-card {
+          grid-template-columns: 40px 1fr;
+          grid-template-areas:
+            'rank main'
+            'meta meta';
+        }
+        .ranking-rank {
+          grid-area: rank;
+        }
+        .ranking-main {
+          grid-area: main;
+        }
+        .ranking-meta {
+          grid-area: meta;
+          flex-direction: row;
+          justify-content: flex-end;
+        }
       }
     </style>
   </head>
@@ -702,24 +816,12 @@
             <h2>みんなの現在の順位</h2>
             <p class="section-lead">最新のPt順で上位15件を表示しています。</p>
           </div>
-          <button class="close-tab-btn" id="close-tab-btn">閉じる</button>
+          <button class="close-tab-btn" id="close-tab-btn">入力画面に戻る</button>
         </div>
         <div class="ranking-layout">
           <div class="ranking-results">
             <div class="status" id="ranking-status">最新の順位を読み込んでいます...</div>
-            <div class="ranking-table-wrapper">
-              <table class="ranking-table">
-                <thead>
-                  <tr>
-                    <th>順位</th>
-                    <th>商品</th>
-                    <th>価格</th>
-                    <th>Pt</th>
-                  </tr>
-                </thead>
-                <tbody id="ranking-list"></tbody>
-              </table>
-            </div>
+            <div id="ranking-cards" class="ranking-cards"></div>
           </div>
         </div>
       </section>
@@ -744,7 +846,7 @@
       const IMAGE_SIZES = {
         card: 300,
         thumb: 64,
-        ranking: 64,
+        ranking: 44,
       };
       const IMAGE_DIMENSIONS = {
         card: { width: 240, height: 320 },
@@ -763,7 +865,7 @@
         formView: document.getElementById('form-view'),
         rankingView: document.getElementById('ranking-view'),
         rankingStatus: document.getElementById('ranking-status'),
-        rankingList: document.getElementById('ranking-list'),
+        rankingList: document.getElementById('ranking-cards'),
         closeTabBtn: document.getElementById('close-tab-btn'),
       };
 
@@ -1212,19 +1314,18 @@
 
         const frag = document.createDocumentFragment();
         items.forEach((item, idx) => {
-          const row = document.createElement('tr');
-          if (idx < 3) {
-            row.classList.add('rank-top');
-          }
-          const rank = document.createElement('td');
-          rank.textContent = `${idx + 1}位`;
+          const card = document.createElement('div');
+          card.className = 'ranking-card';
 
-          const productCell = document.createElement('td');
-          const wrap = document.createElement('div');
-          wrap.className = 'ranking-product';
+          const rank = document.createElement('div');
+          rank.className = 'ranking-rank';
+          rank.textContent = String(idx + 1);
+
+          const main = document.createElement('div');
+          main.className = 'ranking-main';
 
           const thumb = document.createElement('div');
-          thumb.className = 'ranking-product-thumb';
+          thumb.className = 'ranking-thumb';
           const img = document.createElement('img');
           const resolvedSrc =
             item?.imageUrl || productImageMap.get(String(item?.product || '').trim()) || FALLBACK_IMAGE;
@@ -1237,7 +1338,7 @@
           }
           configureImage(img, {
             src: resolvedSrc,
-            alt: item?.product || '商品画像',
+            alt: item?.product || '商品',
             size: IMAGE_SIZES.ranking,
             width: IMAGE_DIMENSIONS.ranking.width,
             height: IMAGE_DIMENSIONS.ranking.height,
@@ -1246,25 +1347,41 @@
           });
           thumb.appendChild(img);
 
-          const nameWrap = document.createElement('div');
-          nameWrap.className = 'ranking-product-name';
-          nameWrap.textContent = item?.product || '商品名不明';
+          const info = document.createElement('div');
+          info.className = 'ranking-info';
 
-          wrap.appendChild(thumb);
-          wrap.appendChild(nameWrap);
-          productCell.appendChild(wrap);
+          const name = document.createElement('div');
+          name.className = 'ranking-name';
+          name.textContent = item?.product || '商品名不明';
 
-          const price = document.createElement('td');
-          price.textContent = item?.price || '-';
+          const sub = document.createElement('div');
+          sub.className = 'ranking-sub';
+          sub.textContent = [item?.maker, item?.category].filter(Boolean).join(' / ');
 
-          const points = document.createElement('td');
+          info.appendChild(name);
+          if (sub.textContent) info.appendChild(sub);
+
+          main.appendChild(thumb);
+          main.appendChild(info);
+
+          const meta = document.createElement('div');
+          meta.className = 'ranking-meta';
+
+          const points = document.createElement('div');
+          points.className = 'ranking-points';
           points.textContent = `${item?.points || 0} Pt`;
 
-          row.appendChild(rank);
-          row.appendChild(productCell);
-          row.appendChild(price);
-          row.appendChild(points);
-          frag.appendChild(row);
+          const price = document.createElement('div');
+          price.className = 'ranking-price';
+          price.textContent = item?.price || '';
+
+          meta.appendChild(points);
+          if (price.textContent) meta.appendChild(price);
+
+          card.appendChild(rank);
+          card.appendChild(main);
+          card.appendChild(meta);
+          frag.appendChild(card);
         });
         els.rankingList.appendChild(frag);
 
@@ -1284,7 +1401,8 @@
       }
 
       function closeTab() {
-        window.close();
+        switchView('form');
+        setRankingStatus('');
       }
 
       function load() {
