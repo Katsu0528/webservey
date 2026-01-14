@@ -457,6 +457,18 @@
         transition: 0.15s;
       }
 
+      .chip--highlight {
+        border: 2px solid var(--accent);
+        background: #f8faff;
+        box-shadow: 0 10px 20px rgba(37, 99, 235, 0.18);
+      }
+
+      .chip--highlight[aria-pressed='true'] {
+        border-color: transparent;
+        background: linear-gradient(120deg, var(--accent), var(--accent-2));
+        box-shadow: 0 12px 24px rgba(37, 99, 235, 0.28);
+      }
+
       .chip[aria-pressed='true'] {
         border-color: transparent;
         color: #fff;
@@ -1271,7 +1283,7 @@
           </div>
 
           <div class="q2-controls">
-            <button type="button" class="chip" id="snack-none-btn" aria-pressed="false">特になし</button>
+            <button type="button" class="chip chip--highlight" id="snack-none-btn" aria-pressed="false">特になし</button>
             <p class="q2-hint">「特になし」または自由記入のどちらかが必須です。</p>
           </div>
 
