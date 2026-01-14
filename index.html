@@ -4,52 +4,57 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>自動販売機アンケート</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
-
       :root {
-        --accent: #2f6fed;
-        --accent-2: #1f4fb8;
-        --border: #e7e5e4;
-        --muted: #fafaf9;
-        --text: #1f2937;
+        --accent: #2563eb;
+        --border: #e5e7eb;
+        --muted: #f9fafb;
+        --text: #111827;
         --subtext: #4b5563;
-        --bg: #ffffff;
-        --bg-soft: #fff7ed;
-        --shadow: 0 8px 22px rgba(0, 0, 0, 0.06);
+        --shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
       }
 
       body {
         margin: 0;
         font-family: 'Noto Sans JP', system-ui, -apple-system, sans-serif;
-        background: linear-gradient(180deg, var(--bg-soft), var(--bg) 45%);
-        color: var(--text);
+        color: #111827;
+        background: #f8fafc;
       }
 
       .page {
-        max-width: 1040px;
+        max-width: 980px;
         margin: 0 auto;
-        padding: 28px 16px 60px;
+        padding: 28px 16px 56px;
       }
 
       h1 {
-        font-size: 30px;
-        margin: 0 0 12px;
-        letter-spacing: 0.02em;
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+        margin: 0 0 8px;
       }
 
       h2 {
-        margin: 4px 0 6px;
+        font-size: 18px;
+        font-weight: 700;
+        margin: 0 0 6px;
       }
 
+      .section-lead,
       p.lead {
         margin: 0 0 18px;
-        color: var(--subtext);
+        color: #4b5563;
         line-height: 1.7;
       }
 
       header.hero {
-        background: linear-gradient(180deg, rgba(47, 111, 237, 0.06), #ffffff 55%);
+        background: #fff;
         border: 1px solid var(--border);
         border-radius: 16px;
         padding: 18px;
@@ -83,7 +88,7 @@
         border-radius: 16px;
         padding: 18px 16px 20px;
         margin-top: 16px;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+        box-shadow: var(--shadow);
       }
 
       .section-header {
@@ -107,14 +112,13 @@
         bottom: 6px;
         width: 3px;
         border-radius: 999px;
-        background: linear-gradient(180deg, rgba(47, 111, 237, 0.8), rgba(47, 111, 237, 0.15));
+        background: linear-gradient(180deg, rgba(37, 99, 235, 0.8), rgba(37, 99, 235, 0.15));
       }
 
       .section-lead {
         margin: 0;
         color: var(--subtext);
-        line-height: 1.6;
-        font-size: 14px;
+        line-height: 1.7;
       }
 
       .eyebrow {
@@ -153,9 +157,9 @@
       }
 
       .tab.active {
-        background: #eef5ff;
-        color: var(--accent-2);
-        border-color: rgba(47, 111, 237, 0.35);
+        background: #eff6ff;
+        border-color: #bfdbfe;
+        color: #1d4ed8;
         box-shadow: none;
       }
 
@@ -185,20 +189,21 @@
         border-radius: 16px;
         padding: 12px;
         background: #fff;
-        transition: 0.15s;
+        transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
         cursor: grab;
         display: flex;
         flex-direction: column;
         gap: 10px;
         position: relative;
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
         align-items: center;
         text-align: center;
       }
 
       .card:hover {
-        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.07);
-        transform: translateY(-1px);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
+        border-color: #d1d5db;
       }
 
       .card.disabled {
@@ -228,7 +233,7 @@
 
       .selection-panel {
         border: 1px solid var(--border);
-        border-radius: 12px;
+        border-radius: 16px;
         padding: 12px;
         background: #fff;
         box-shadow: var(--shadow);
@@ -353,7 +358,7 @@
       .card .price {
         font-size: 16px;
         font-weight: 800;
-        color: var(--accent-2);
+        color: #1d4ed8;
       }
 
       .card .meta,
@@ -394,7 +399,7 @@
         padding: 12px 18px;
         font-size: 15px;
         cursor: pointer;
-        box-shadow: 0 10px 18px rgba(47, 111, 237, 0.18);
+        box-shadow: 0 10px 18px rgba(37, 99, 235, 0.22);
         transition: 0.18s;
         font-weight: 700;
         letter-spacing: 0.01em;
@@ -482,7 +487,7 @@
 
       .note {
         color: var(--subtext);
-        background: var(--bg-soft);
+        background: var(--muted);
         border: 1px dashed #f2d5c2;
         padding: 10px 12px;
         border-radius: 12px;
@@ -586,7 +591,7 @@
 
       .ranking-table tr.rank-top td:first-child {
         font-weight: 700;
-        color: var(--accent-2);
+        color: #1d4ed8;
       }
 
       .ranking-table tr.rank-top .ranking-product-thumb {
@@ -737,9 +742,9 @@
       const FALLBACK_IMAGE =
         'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="360" height="240" viewBox="0 0 360 240"><rect width="360" height="240" fill="%23f2f4f7"/><rect x="30" y="30" width="300" height="180" rx="12" fill="none" stroke="%23c3cad4" stroke-width="8"/><path d="M96 166l48-58 48 58 48-72 24 32" fill="none" stroke="%23c3cad4" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><circle cx="138" cy="90" r="22" fill="%23d8dde5"/></svg>';
       const IMAGE_SIZES = {
-        card: 320,
-        thumb: 96,
-        ranking: 128,
+        card: 300,
+        thumb: 64,
+        ranking: 64,
       };
       const IMAGE_DIMENSIONS = {
         card: { width: 240, height: 320 },
@@ -812,8 +817,20 @@
         if (raw.startsWith('data:')) return raw;
         if (!size) return raw;
         if (!raw.includes('googleusercontent.com')) return raw;
-        if (/=w\d+/i.test(raw) || /=s\d+/i.test(raw)) return raw;
+        if (/=w\d+/i.test(raw)) return raw.replace(/=w\d+/gi, `=w${size}`);
+        if (/=s\d+/i.test(raw)) return raw.replace(/=s\d+/gi, `=w${size}`);
         return `${raw}=w${size}`;
+      }
+
+      function preloadImages(urls) {
+        urls
+          .filter(Boolean)
+          .slice(0, 6)
+          .forEach((url) => {
+            const img = new Image();
+            img.decoding = 'async';
+            img.src = url;
+          });
       }
 
       function configureImage(img, options = {}) {
@@ -965,6 +982,12 @@
         }
 
         els.productGrid.dataset.category = category.name;
+        const preloadUrls = category.items
+          .slice(0, 6)
+          .map((item) => getOptimizedImageUrl(item.imageUrl, IMAGE_SIZES.card));
+        preloadImages(preloadUrls);
+
+        const frag = document.createDocumentFragment();
         category.items.forEach((item, idx) => {
           const card = document.createElement('div');
           card.className = 'card product-card';
@@ -1007,8 +1030,9 @@
           card.addEventListener('dragstart', (event) => startCatalogDrag(event, item));
           card.addEventListener('dragend', resetDragState);
           card.addEventListener('click', () => assignProductToActiveRank(item));
-          els.productGrid.appendChild(card);
+          frag.appendChild(card);
         });
+        els.productGrid.appendChild(frag);
 
         updateProductSelections();
       }
@@ -1186,6 +1210,7 @@
         const items = Array.isArray(products) ? products.slice(0, 15) : [];
         if (!items.length) return false;
 
+        const frag = document.createDocumentFragment();
         items.forEach((item, idx) => {
           const row = document.createElement('tr');
           if (idx < 3) {
@@ -1239,8 +1264,9 @@
           row.appendChild(productCell);
           row.appendChild(price);
           row.appendChild(points);
-          els.rankingList.appendChild(row);
+          frag.appendChild(row);
         });
+        els.rankingList.appendChild(frag);
 
         return true;
       }
