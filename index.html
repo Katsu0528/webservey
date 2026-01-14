@@ -232,16 +232,51 @@
       }
 
       .selection-panel {
+        position: sticky;
+        top: 16px;
+        align-self: start;
+        max-height: calc(100vh - 32px);
         border: 1px solid var(--border);
         border-radius: 16px;
         padding: 12px;
         background: #fff;
         box-shadow: var(--shadow);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
       }
 
       .selection-panel h3 {
-        margin: 0 0 10px;
+        margin: 0;
         font-size: 16px;
+      }
+
+      .selection-panel__head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .selection-panel__body {
+        overflow: auto;
+        padding-right: 2px;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .selection-panel__footer {
+        position: sticky;
+        bottom: 0;
+        background: #fff;
+        padding-top: 10px;
+        border-top: 1px solid var(--border);
+      }
+
+      .selection-panel__footer .primary {
+        width: 100%;
       }
 
       .rank-list {
@@ -381,14 +416,6 @@
         resize: vertical;
         box-sizing: border-box;
         background: #fff;
-      }
-
-      .actions {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-top: 18px;
-        flex-wrap: wrap;
       }
 
       button.primary {
@@ -766,6 +793,16 @@
         }
         .selection-panel {
           order: -1;
+          position: static;
+          max-height: none;
+        }
+        .selection-panel__body {
+          overflow: visible;
+        }
+        .selection-panel__footer {
+          position: static;
+          border-top: none;
+          padding-top: 0;
         }
         .vending-area {
           order: 0;
@@ -796,9 +833,6 @@
         button.primary {
           width: 100%;
           justify-content: center;
-        }
-        .actions {
-          gap: 10px;
         }
       }
 
@@ -870,7 +904,6 @@
                 <br />1位3pt/2位2pt/3位1ptで集計されます。
               </p>
             </div>
-            <div class="counter" id="product-count">0/3</div>
           </div>
           <div class="selection-layout">
             <div class="vending-area">
@@ -879,17 +912,21 @@
                 <div id="product-grid" class="card-grid"></div>
               </div>
             </div>
-            <aside class="selection-panel">
-              <h3>あなたのTOP3</h3>
-              <div class="rank-list" id="rank-list"></div>
+            <aside class="selection-panel" id="selection-panel">
+              <div class="selection-panel__head">
+                <h3>あなたのTOP3</h3>
+                <div class="counter" id="product-count">0/3</div>
+              </div>
+              <div class="selection-panel__body">
+                <div class="rank-list" id="rank-list"></div>
+                <div class="status" id="status"></div>
+              </div>
+              <div class="selection-panel__footer">
+                <button class="primary" id="submit-btn">この内容で送信する</button>
+              </div>
             </aside>
           </div>
         </section>
-
-        <div class="actions">
-          <button class="primary" id="submit-btn">この内容で送信</button>
-          <div class="status" id="status"></div>
-        </div>
       </div>
 
       <section id="ranking-view" class="view ranking-view">
