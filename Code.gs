@@ -11,7 +11,7 @@ const MAKER_BADGE_FOLDER_ID = '1AJd4BTFTVrLNep44PDz1AuwSF_5TFxdx';
 const RESPONSE_SHEET_NAME = '回答';
 const AGGREGATE_SHEET_NAME = '集計';
 const FREE_TEXT_SHEET_NAME = '自由記入';
-const RANK_POINTS = [4, 2, 1];
+const RANK_POINTS = [3, 2, 1];
 
 const categoryFolderCache = {};
 const makerFolderCache = {};
