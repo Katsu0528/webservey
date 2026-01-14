@@ -47,7 +47,7 @@ function getInitialData() {
 
   return {
     categories,
-    email: Session.getActiveUser().getEmail() || '',
+    email: safeGetEmail_(),
   };
 }
 
@@ -57,9 +57,11 @@ function submitResponse(payload) {
   if (!ranking) throw new Error('1位から3位まで選択してください。');
 
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const email = Session.getActiveUser().getEmail() || payload.email || 'anonymous';
+  const emailFromPayload = payload && payload.email ? String(payload.email).trim() : '';
+  const emailFromSession = safeGetEmail_();
+  const email = (emailFromPayload || emailFromSession || 'unknown').toLowerCase();
 
-  appendResponseRow(ss, ranking, payload.freeText, payload.snackNone, payload.snackText);
+  appendResponseRow(ss, email, ranking, payload.freeText, payload.snackNone, payload.snackText);
   appendAggregateRows(ss, email, ranking, payload.freeText);
   appendFreeTextRow(ss, email, payload.freeText);
 
@@ -72,20 +74,24 @@ function normalizeRanking(list) {
   return items;
 }
 
-function appendResponseRow(ss, ranking, freeText, snackNone, snackText) {
+function appendResponseRow(ss, email, ranking, freeText, snackNone, snackText) {
   const sheet = ss.getSheetByName(RESPONSE_SHEET_NAME) || ss.insertSheet(RESPONSE_SHEET_NAME);
   if (sheet.getLastRow() === 0) {
     sheet.appendRow([
       'タイムスタンプ',
+      'メールアドレス',
       '1位カテゴリ',
       '1位商品名',
       '1位ポイント',
+      '1位キー',
       '2位カテゴリ',
       '2位商品名',
       '2位ポイント',
+      '2位キー',
       '3位カテゴリ',
       '3位商品名',
       '3位ポイント',
+      '3位キー',
       '軽食特になし',
       '軽食自由記入',
       '自由記入',
@@ -93,12 +99,16 @@ function appendResponseRow(ss, ranking, freeText, snackNone, snackText) {
   }
 
   const buildProductCells = (product, index) => {
-    if (!product) return ['', '', RANK_POINTS[index] || 0];
-    return [product.category || '', product.product || '', RANK_POINTS[index] || 0];
+    if (!product) return ['', '', RANK_POINTS[index] || 0, ''];
+    const category = product.category || '';
+    const name = product.product || '';
+    const key = normalizeRankingKey_(category, name);
+    return [category, name, RANK_POINTS[index] || 0, key];
   };
 
   sheet.appendRow([
     new Date(),
+    email,
     ...buildProductCells(ranking[0], 0),
     ...buildProductCells(ranking[1], 1),
     ...buildProductCells(ranking[2], 2),
@@ -260,11 +270,16 @@ function buildRankingMap(rows) {
     const maker = row[5] || '';
     const product = row[6] || '';
     const price = row[7] || '';
-    const productKey = [category, maker, product, price].join('||');
+    const productKey = normalizeRankingKey_(category, product);
+    if (!productKey) return;
 
     if (!productMap[productKey]) {
-      productMap[productKey] = { category, maker, product, price, points: 0, count: 0 };
+      productMap[productKey] = { key: productKey, category, maker, product, price, points: 0, count: 0 };
     }
+    if (!productMap[productKey].category && category) productMap[productKey].category = category;
+    if (!productMap[productKey].maker && maker) productMap[productKey].maker = maker;
+    if (!productMap[productKey].product && product) productMap[productKey].product = product;
+    if (!productMap[productKey].price && price) productMap[productKey].price = price;
     productMap[productKey].points += points;
     productMap[productKey].count += 1;
   });
@@ -528,6 +543,48 @@ function normalizeProductKey(name) {
     .trim()
     .replace(/\.[^.]+$/, '')
     .toLowerCase();
+}
+
+function normalizeText_(value) {
+  let text = String(value || '');
+  text = text.replace(/[\r\n\t]/g, ' ');
+  text = text.replace(/\u3000/g, ' ');
+  text = text.replace(/\s+/g, ' ');
+  text = text.trim();
+  try {
+    text = text.normalize('NFKC');
+  } catch (e) {
+    // normalize をサポートしない環境向けに無視
+  }
+  return text;
+}
+
+function normalizeRankingKey_(category, product) {
+  const normalizedCategory = normalizeText_(category).toLowerCase();
+  let normalizedProduct = normalizeText_(product).toLowerCase();
+  if (!normalizedCategory && !normalizedProduct) return '';
+  normalizedProduct = normalizedProduct.replace(/[・･]/g, '');
+  normalizedProduct = normalizedProduct.replace(/[‐-–—―ーｰ−]/g, '-');
+  normalizedProduct = normalizedProduct.replace(/[\/／]/g, '/');
+  normalizedProduct = normalizedProduct.replace(/[()（）\[\]【】]/g, '');
+  normalizedProduct = normalizedProduct.replace(/\s+/g, '');
+  return `${normalizedCategory}|${normalizedProduct}`;
+}
+
+function safeGetEmail_() {
+  try {
+    const activeEmail = Session.getActiveUser().getEmail();
+    if (activeEmail) return activeEmail;
+  } catch (e) {
+    // ignore
+  }
+  try {
+    const effectiveEmail = Session.getEffectiveUser().getEmail();
+    if (effectiveEmail) return effectiveEmail;
+  } catch (e) {
+    // ignore
+  }
+  return '';
 }
 
 function stripExtension(name) {
