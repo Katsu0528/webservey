@@ -59,7 +59,7 @@ function submitResponse(payload) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const email = Session.getActiveUser().getEmail() || payload.email || 'anonymous';
 
-  appendResponseRow(ss, email, ranking, payload.freeText);
+  appendResponseRow(ss, ranking, payload.freeText, payload.snackNone, payload.snackText);
   appendAggregateRows(ss, email, ranking, payload.freeText);
   appendFreeTextRow(ss, email, payload.freeText);
 
@@ -72,39 +72,38 @@ function normalizeRanking(list) {
   return items;
 }
 
-function appendResponseRow(ss, email, ranking, freeText) {
+function appendResponseRow(ss, ranking, freeText, snackNone, snackText) {
   const sheet = ss.getSheetByName(RESPONSE_SHEET_NAME) || ss.insertSheet(RESPONSE_SHEET_NAME);
   if (sheet.getLastRow() === 0) {
     sheet.appendRow([
       'タイムスタンプ',
-      'メールアドレス',
       '1位カテゴリ',
-      '1位メーカー',
       '1位商品名',
-      '1位価格',
+      '1位ポイント',
       '2位カテゴリ',
-      '2位メーカー',
       '2位商品名',
-      '2位価格',
+      '2位ポイント',
       '3位カテゴリ',
-      '3位メーカー',
       '3位商品名',
-      '3位価格',
+      '3位ポイント',
+      '軽食特になし',
+      '軽食自由記入',
       '自由記入',
     ]);
   }
 
-  const buildProductCells = (product) => {
-    if (!product) return ['', '', '', ''];
-    return [product.category || '', product.maker || '', product.product || '', product.price || ''];
+  const buildProductCells = (product, index) => {
+    if (!product) return ['', '', RANK_POINTS[index] || 0];
+    return [product.category || '', product.product || '', RANK_POINTS[index] || 0];
   };
 
   sheet.appendRow([
     new Date(),
-    email,
-    ...buildProductCells(ranking[0]),
-    ...buildProductCells(ranking[1]),
-    ...buildProductCells(ranking[2]),
+    ...buildProductCells(ranking[0], 0),
+    ...buildProductCells(ranking[1], 1),
+    ...buildProductCells(ranking[2], 2),
+    Boolean(snackNone),
+    snackText || '',
     freeText || '',
   ]);
 }
@@ -132,7 +131,7 @@ function appendAggregateRows(ss, email, ranking, freeText) {
       `${idx + 1}位`,
       RANK_POINTS[idx] || 0,
       (product && product.category) || '',
-      (product && product.maker) || '',
+      '',
       (product && product.product) || '',
       (product && product.price) || '',
       idx === 0 ? freeText || '' : '',
