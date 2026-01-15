@@ -114,8 +114,10 @@ function appendResponseRow(ss, ranking, freeText, snackNone, snackText) {
 
 function appendAggregateRows(ss, ranking, freeText) {
   const sheet = ss.getSheetByName(AGGREGATE_SHEET_NAME) || ss.insertSheet(AGGREGATE_SHEET_NAME);
-  if (sheet.getLastRow() === 0) {
-    sheet.appendRow([
+  const DATA_COLUMNS = 8;
+  const dataLastRow = sheet.getRange('A:A').getLastRow();
+  if (dataLastRow === 0) {
+    sheet.getRange(1, 1, 1, DATA_COLUMNS).setValues([[
       'タイムスタンプ',
       '順位',
       'ポイント',
@@ -124,21 +126,23 @@ function appendAggregateRows(ss, ranking, freeText) {
       '商品名',
       '価格',
       '自由記入',
-    ]);
+    ]]);
   }
 
-  ranking.forEach((product, idx) => {
-    sheet.appendRow([
-      new Date(),
-      `${idx + 1}位`,
-      RANK_POINTS[idx] || 0,
-      (product && product.category) || '',
-      '',
-      (product && product.product) || '',
-      (product && product.price) || '',
-      idx === 0 ? freeText || '' : '',
-    ]);
-  });
+  const insertStartRow = Math.max(dataLastRow, 1) + 1;
+  const rows = ranking.map((product, idx) => ([
+    new Date(),
+    `${idx + 1}位`,
+    RANK_POINTS[idx] || 0,
+    (product && product.category) || '',
+    '',
+    (product && product.product) || '',
+    (product && product.price) || '',
+    idx === 0 ? freeText || '' : '',
+  ]));
+  if (rows.length) {
+    sheet.getRange(insertStartRow, 1, rows.length, DATA_COLUMNS).setValues(rows);
+  }
 
   refreshPointSummary(sheet);
 }
@@ -164,8 +168,8 @@ function refreshPointSummary(sheet) {
 
   SUMMARY_TITLE_CELL.setValue('ポイント集計');
 
-  const lastRow = sheet.getLastRow();
-  const dataRowCount = Math.max(lastRow - 1, 0);
+  const dataLastRow = sheet.getRange('A:A').getLastRow();
+  const dataRowCount = Math.max(dataLastRow - 1, 0);
   if (dataRowCount === 0) {
     sheet.getRange(SUMMARY_START_ROW, SUMMARY_START_COL, sheet.getMaxRows() - SUMMARY_START_ROW + 1, headers.length).clearContent();
     return;
