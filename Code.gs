@@ -115,7 +115,7 @@ function appendResponseRow(ss, ranking, freeText, snackNone, snackText) {
 function appendAggregateRows(ss, ranking, freeText) {
   const sheet = ss.getSheetByName(AGGREGATE_SHEET_NAME) || ss.insertSheet(AGGREGATE_SHEET_NAME);
   const DATA_COLUMNS = 8;
-  const dataLastRow = sheet.getRange('A:A').getLastRow();
+  const dataLastRow = sheet.getLastRow();
   if (dataLastRow === 0) {
     sheet.getRange(1, 1, 1, DATA_COLUMNS).setValues([[
       'タイムスタンプ',
@@ -168,7 +168,7 @@ function refreshPointSummary(sheet) {
 
   SUMMARY_TITLE_CELL.setValue('ポイント集計');
 
-  const dataLastRow = sheet.getRange('A:A').getLastRow();
+  const dataLastRow = sheet.getLastRow();
   const dataRowCount = Math.max(dataLastRow - 1, 0);
   if (dataRowCount === 0) {
     sheet.getRange(SUMMARY_START_ROW, SUMMARY_START_COL, sheet.getMaxRows() - SUMMARY_START_ROW + 1, headers.length).clearContent();
