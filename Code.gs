@@ -115,7 +115,7 @@ function appendResponseRow(ss, ranking, freeText, snackNone, snackText) {
 function appendAggregateRows(ss, ranking, freeText) {
   const sheet = ss.getSheetByName(AGGREGATE_SHEET_NAME) || ss.insertSheet(AGGREGATE_SHEET_NAME);
   const DATA_COLUMNS = 8;
-  const dataLastRow = sheet.getLastRow();
+  let dataLastRow = getLastRowInColumn_(sheet, 1);
   if (dataLastRow === 0) {
     sheet.getRange(1, 1, 1, DATA_COLUMNS).setValues([[
       'タイムスタンプ',
@@ -127,9 +127,10 @@ function appendAggregateRows(ss, ranking, freeText) {
       '価格',
       '自由記入',
     ]]);
+    dataLastRow = 1;
   }
 
-  const insertStartRow = Math.max(dataLastRow, 1) + 1;
+  const insertStartRow = dataLastRow + 1;
   const rows = ranking.map((product, idx) => ([
     new Date(),
     `${idx + 1}位`,
@@ -168,7 +169,7 @@ function refreshPointSummary(sheet) {
 
   SUMMARY_TITLE_CELL.setValue('ポイント集計');
 
-  const dataLastRow = sheet.getLastRow();
+  const dataLastRow = getLastRowInColumn_(sheet, 1);
   const dataRowCount = Math.max(dataLastRow - 1, 0);
   if (dataRowCount === 0) {
     sheet.getRange(SUMMARY_START_ROW, SUMMARY_START_COL, sheet.getMaxRows() - SUMMARY_START_ROW + 1, headers.length).clearContent();
@@ -204,9 +205,20 @@ function refreshPointSummary(sheet) {
   });
 
   const output = [headers, ...summaryRows.map((item) => [item.category, item.maker, item.product, item.price, item.points, item.count])];
-  const clearHeight = Math.max(sheet.getLastRow(), SUMMARY_START_ROW + output.length) - SUMMARY_START_ROW + 1;
+  const summaryLastRow = getLastRowInColumn_(sheet, SUMMARY_START_COL);
+  const clearHeight = Math.max(summaryLastRow, SUMMARY_START_ROW + output.length - 1) - SUMMARY_START_ROW + 1;
   sheet.getRange(SUMMARY_START_ROW, SUMMARY_START_COL, clearHeight, headers.length).clearContent();
   sheet.getRange(SUMMARY_START_ROW, SUMMARY_START_COL, output.length, headers.length).setValues(output);
+}
+
+function getLastRowInColumn_(sheet, columnIndex) {
+  const maxRows = sheet.getMaxRows();
+  if (maxRows === 0) return 0;
+  const values = sheet.getRange(1, columnIndex, maxRows, 1).getValues();
+  for (let i = values.length - 1; i >= 0; i -= 1) {
+    if (values[i][0]) return i + 1;
+  }
+  return 0;
 }
 
 function getRankingSummary() {
